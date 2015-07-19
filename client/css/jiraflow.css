@@ -69,3 +69,16 @@ body {
 .accounts-search {
     margin-top: 50px;
 }
+
+/*
+ * Server administration
+ */
+
+.jira-configuration-instructions dt {
+    float: left;
+    margin-right: 10px;
+}
+
+.jira-configuration-instructions dd pre {
+    clear: left
+}

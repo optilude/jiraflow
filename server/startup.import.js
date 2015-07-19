@@ -4,9 +4,12 @@
 
 import { _ } from 'app-deps';
 
+import Constants from './constants';
+
 // imports with side-effects
 import 'lib/models';
-import 'server/admin';
+import './admin';
+import './reference';
 
 // Perform application initialisation on startup
 
@@ -18,9 +21,10 @@ Meteor.startup(function () {
         { service: "jira" },
         {
             $set: {
-                loginStyle: 'popup',
-                consumerKey: "JiraFlow",
-                privateKey: Assets.getText("keys/jiraflow.pem")
+                loginStyle: Constants.LoginStyle,
+                consumerKey: Constants.ConsumerKey,
+                privateKey: Assets.getText(Constants.PrivateKeyPath),
+                publicKey: Assets.getText(Constants.PublicKeyPath),
             }
         }
     );
