@@ -294,7 +294,7 @@ var ConfigureJira = React.createClass({
                     <p>
                         Before users of JiraFlow can authenticate against a
                         given JIRA instance, you must first configure the remote
-                        JIRA instance to accept your app as an inbound
+                        JIRA instance to accept JiraFlow as an inbound
                         authentication link.
                     </p>
                     <ol className="jira-configuration-instructions">
