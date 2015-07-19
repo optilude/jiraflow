@@ -15,23 +15,25 @@ export default React.createClass({
     getMeteorData: function() {
         var user = Meteor.user();
         return {
-            user: user,
-            isAdmin: user? Roles.userIsInRole(user, ['admin']) : false,
+            user: user
         };
     },
 
     render: function() {
 
+        var isAdmin = this.data.user? Roles.userIsInRole(this.data.user, ['admin']) : false,
+            isMeteorUser = Boolean(this.data.user && this.data.user.services && this.data.user.services.password);
+
         return (
-            <Navbar brand={<Link to="home">Meteor/React Example</Link>} inverse fixedTop toggleNavKey={0}>
+            <Navbar brand={<Link to="home">JiraFlow</Link>} inverse fixedTop toggleNavKey={0}>
                 <CollapsibleNav eventKey={0}>
                     <Nav navbar>
 
                     </Nav>
                     <Nav navbar right>
                         <DropdownButton ref="userMenu" title={this.data.user? this.data.user.username || this.data.user.profile.name : "Not logged in"}>
-                            {this.data.isAdmin? <MenuItemLink onClick={this.linkClick} to="adminUsers">Manage users</MenuItemLink> : ""}
-                            <MenuItemLink onClick={this.linkClick} to="changePassword">Change password</MenuItemLink>
+                            {isAdmin? <MenuItemLink onClick={this.linkClick} to="adminUsers">Manage users</MenuItemLink> : ""}
+                            {isMeteorUser? <MenuItemLink onClick={this.linkClick} to="changePassword">Change password</MenuItemLink> : ""}
                             <MenuItem onClick={this.logout}>Log out</MenuItem>
                         </DropdownButton>
                     </Nav>

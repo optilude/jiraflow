@@ -37,7 +37,13 @@ export default React.createClass({
         return (
             <div className="container">
                 <form className="form-signin" onSubmit={this.onSubmit}>
-                    <h2 className="form-signin-heading">Log in</h2>
+                    <h2 className="form-signin-heading">Authenticate with JIRA</h2>
+
+                    <p className="help-block">
+                        Choose a JIRA server to let JiraFlow to make
+                        queries on your behalf. Your JIRA username and password
+                        will <em>not</em> be accessible to JiraFlow.
+                    </p>
 
                     {this.state.error? <Alert bsStyle="danger">An error occurred - please try again.</Alert> : ""}
 
@@ -47,7 +53,7 @@ export default React.createClass({
                         })}
                     </Input>
 
-                    <Button bsStyle="primary" block type="submit">Authenticate</Button>
+                    <Button bsStyle="primary" block type="submit">Authorise</Button>
                 </form>
             </div>
         );

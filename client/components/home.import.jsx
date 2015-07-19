@@ -16,8 +16,8 @@ export default React.createClass({
         return (
             <div className="home-page">
                 <div className="jumbotron">
-                    <h1>Welcome to the Meteor/React Example App</h1>
-                    <p>Lorem ipsum</p>
+                    <h1>JiraFlow</h1>
+                    <p>Advanced analysis of JIRA data</p>
                     <p><a className="btn btn-primary btn-lg" role="button">Get started &raquo;</a></p>
                 </div>
             </div>
