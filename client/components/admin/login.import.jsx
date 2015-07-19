@@ -7,8 +7,6 @@ import { _, Router, ReactBootstrap } from 'app-deps';
 var { Alert, Input, Button } = ReactBootstrap;
 var { Link } = Router;
 
-// React components for login flows
-
 export var Login = React.createClass({
     displayName: 'Login',
     mixins: [React.addons.LinkedStateMixin, Router.Navigation],

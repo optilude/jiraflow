@@ -33,6 +33,7 @@ export default React.createClass({
                     <Nav navbar right>
                         <DropdownButton ref="userMenu" title={this.data.user? this.data.user.username || this.data.user.profile.name : "Not logged in"}>
                             {isAdmin? <MenuItemLink onClick={this.linkClick} to="adminUsers">Manage users</MenuItemLink> : ""}
+                            {isAdmin? <MenuItemLink onClick={this.linkClick} to="adminServers">Manage servers</MenuItemLink> : ""}
                             {isMeteorUser? <MenuItemLink onClick={this.linkClick} to="changePassword">Change password</MenuItemLink> : ""}
                             <MenuItem onClick={this.logout}>Log out</MenuItem>
                         </DropdownButton>

@@ -7,8 +7,6 @@ import { _, Router, ReactBootstrap } from 'app-deps';
 var { Link } = Router;
 var { Alert, Input, Button } = ReactBootstrap;
 
-// React components for managing users
-
 export var AdminUsers = React.createClass({
     displayName: 'AdminUsers',
 
@@ -26,9 +24,6 @@ export var AdminUsers = React.createClass({
     }
 
 });
-
-// This component uses the Meteor Blaze template engine to render the template
-// from the `accounts-admin-ui-bootstrap-3` package.
 
 export var ManageUsers = React.createClass({
     displayName: 'ManageUsers',

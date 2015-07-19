@@ -7,9 +7,6 @@ import TopNav from 'client/components/navigation';
 
 var { RouteHandler } = Router;
 
-// The top-level App React component. It uses `<RouteHandler />` from
-// ReactRouter to render whichever page corresponds to the current URL.
-
 export default React.createClass({
     displayName: 'App',
 

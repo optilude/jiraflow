@@ -4,8 +4,10 @@
 
 import { _, Router } from 'app-deps';
 
-import { Login, ResetPassword, EnrollAccount, ChangePassword} from './components/login';
-import { AdminUsers, CreateUser } from './components/users';
+import { Login, ResetPassword, EnrollAccount, ChangePassword} from './components/admin/login';
+import { AdminUsers, CreateUser } from './components/admin/users';
+
+import AdminServers from './components/admin/servers';
 
 import Authenticate from './components/authenticate';
 
@@ -32,8 +34,10 @@ Meteor.startup(() => {
         // App
         <Route name="home" path="/" handler={App}>
             <DefaultRoute handler={Home} />
+
             <Route name="adminUsers" path="admin/users" handler={AdminUsers}/>
             <Route name="adminCreateUser" path="admin/create-user" handler={CreateUser}/>
+            <Route name="adminServers" path="admin/servers" handler={AdminServers}/>
         </Route>
     ];
 
