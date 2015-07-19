@@ -12,24 +12,6 @@ var { Alert, Input, Button, ButtonToolbar, PanelGroup, Panel, Modal } = ReactBoo
 
 export default React.createClass({
     displayName: 'AdminServers',
-
-    render: function() {
-        return (
-            <div>
-                <h1 className="page-header">Manage servers</h1>
-                <p>
-                    Use the list below to manage servers.
-                </p>
-
-                <ManageServers />
-            </div>
-        );
-    }
-
-});
-
-var ManageServers = React.createClass({
-    displayName: "ManageServers",
     mixins: [ReactMeteorData],
 
     getMeteorData: function() {
@@ -65,24 +47,49 @@ var ManageServers = React.createClass({
 
         return (
             <div>
-                <PanelGroup accordion>
-                    {this.data.servers.map((s, i) => {
-                        return (
-                            <Panel bsStyle="primary" key={s.host} header={s.name} eventKey={i}>
-                                <ButtonToolbar style={{float: "right"}}>
-                                    <EditServer server={s} />
-                                    <Button bsSize="small" bsStyle="danger" onClick={this.deleteServer.bind(this, s)}>Delete</Button>
-                                </ButtonToolbar>
-                                <label>Host:</label> <a target="_new" href={"https://" + s.host}>{s.host}</a>
-                            </Panel>
-                        );
-                    })}
-                </PanelGroup>
+                <h1 className="page-header">Manage servers</h1>
+                <p className="help-block">
+                    <span>
+                        Here, you can manage the JIRA servers that JiraFlow
+                        will allow users to authenticate and make queries against.
+                    </span>
+                    {this.data.servers.length > 0?
+                    <span>
+                        &nbsp;Click on a server below to view further details, edit or delete it.
+                    </span> : ""}
+                </p>
 
+                <ManageServers servers={this.data.servers} />
                 <AddServer />
                 <ConfigureJira details={this.state.configurationDetails} />
-
             </div>
+        );
+    }
+
+});
+
+var ManageServers = React.createClass({
+    displayName: "ManageServers",
+
+    propTypes: {
+        servers: React.PropTypes.array.isRequired
+    },
+
+    render: function() {
+        return (
+            <PanelGroup accordion>
+                {this.props.servers.map((s, i) => {
+                    return (
+                        <Panel bsStyle="primary" key={s.host} header={s.name} eventKey={i}>
+                            <ButtonToolbar style={{float: "right"}}>
+                                <EditServer server={s} />
+                                <Button bsSize="small" bsStyle="danger" onClick={this.deleteServer.bind(this, s)}>Delete</Button>
+                            </ButtonToolbar>
+                            <label>Host:</label> <a target="_new" href={"https://" + s.host}>{s.host}</a>
+                        </Panel>
+                    );
+                })}
+            </PanelGroup>
         );
 
     },
