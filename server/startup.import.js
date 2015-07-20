@@ -23,7 +23,6 @@ Meteor.startup(function () {
             $set: {
                 loginStyle: Constants.LoginStyle,
                 consumerKey: Constants.ConsumerKey,
-                privateKey: Assets.getText(Constants.PrivateKeyPath),
                 publicKey: Assets.getText(Constants.PublicKeyPath),
             }
         }
