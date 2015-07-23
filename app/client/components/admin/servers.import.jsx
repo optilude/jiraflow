@@ -316,7 +316,7 @@ var ConfigureJira = React.createClass({
                                 <dd><code>Generic application</code></dd>
 
                                 <dt>Service provider name:</dt>
-                                <dd><code>JiraFlow</code> (it doesn't actualy matter)</dd>
+                                <dd><code>JiraFlow</code> (it doesn't actually matter)</dd>
 
                                 <dt>Consumer key:</dt>
                                 <dd><code>{this.props.details.consumerKey}</code></dd>
@@ -325,13 +325,13 @@ var ConfigureJira = React.createClass({
                                 <dd><code>JiraFlow</code></dd>
 
                                 <dt>Request token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actualy matter)</dd>
+                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
 
                                 <dt>Access token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actualy matter)</dd>
+                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
 
                                 <dt>Authorize token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actualy matter)</dd>
+                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
 
                                 <dt>Create incoming link:</dt>
                                 <dd>Tick the box</dd>

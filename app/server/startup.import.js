@@ -1,5 +1,5 @@
 /* jshint esnext: true */
-/* global Meteor, Roles, Accounts, System, ServiceConfiguration, Assets */
+/* global Meteor, Roles, Accounts, System, ServiceConfiguration, Assets, CeleryClient */
 "use strict";
 
 import { _ } from 'app-deps';
@@ -10,6 +10,7 @@ import Constants from './constants';
 import 'lib/models';
 import './admin';
 import './reference';
+import './query';
 
 // Perform application initialisation on startup
 
