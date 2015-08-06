@@ -1,3 +1,5 @@
+# TODO: Delete
+
 import math
 import itertools
 import datetime
@@ -5,7 +7,7 @@ import dateutil.parser
 import pandas as pd
 import numpy as np
 
-from matplotliblite import date2num
+from .matplotliblite import date2num
 
 def to_datetime(date):
     """Turn a date into a datetime at midnight.

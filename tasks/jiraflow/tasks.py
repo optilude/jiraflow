@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from jira import JIRA
 
-from jiraflow.celery import app
+from .celery import app
 
 @app.task
 def jql(options, jql):
