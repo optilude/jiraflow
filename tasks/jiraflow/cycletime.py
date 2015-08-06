@@ -1,4 +1,4 @@
-from .query import QueryManager
+from query import QueryManager
 import pandas as pd
 import numpy as np
 
@@ -163,18 +163,27 @@ class CycleTimeQueries(QueryManager):
         cycle_start = next(s['name'] for s in self.settings['cycle'] if s['type'] == StatusTypes.accepted)
         cycle_end = next(s['name'] for s in self.settings['cycle'] if s['type'] == StatusTypes.complete)
 
+        # Build a dataframe of just the "date" columns
         df = cycle_data[cycle_names]
+
+        # Strip out times from all dates
         df = pd.DataFrame(
             np.array(df.values, dtype='<M8[ns]').astype('<M8[D]').astype('<M8[ns]'),
             columns=df.columns,
             index=df.index
         )
 
-        df = pd.concat({col:df[col].value_counts() for col in df}, axis=1)
+        # Count number of times each date occurs
+        df = pd.concat({col: df[col].value_counts() for col in df}, axis=1)
+
+        # Fill missing dates with 0 and run a cumulative sum
         df = df.fillna(0).cumsum(axis=0)
+
+        # Reindex to make sure we have all dates
         start, end = df.index.min(), df.index.max()
         df = df.reindex(pd.date_range(start, end, freq='D'), method='ffill')
 
+        # Calculate the approximate average cycle time
         df['cycle_time'] = df[cycle_end] - df[cycle_start]
 
         return df
@@ -196,7 +205,7 @@ class CycleTimeQueries(QueryManager):
         `x`, `y` and the fields from each record in `cycle_data`) and
         `percentiles` (a series with percentile values as keys).
         """
-        
+
         data = cycle_data.dropna(subset=['cycle_time', 'completed_timestamp']) \
                          .rename(columns={'cycle_time': 'y', 'completed_timestamp': 'x'})
 
