@@ -147,7 +147,8 @@ class CycleTimeQueries(QueryManager):
 
             data.append(item)
 
-        return pd.DataFrame(data, columns=['key', 'url', 'issue_type', 'summary', 'status', 'resolution', 'size', 'team', 'release', 'rank', 'cycle_time', 'completed_timestamp'] + cycle_names)
+        return pd.DataFrame(data, columns=['key', 'url', 'issue_type', 'summary', 'status', 'resolution', 'size',
+                                          'team', 'release', 'rank', 'cycle_time', 'completed_timestamp'] + cycle_names)
 
     def cfd(self, cycle_data):
         """Return the data to build a cumulative flow diagram: a DataFrame,

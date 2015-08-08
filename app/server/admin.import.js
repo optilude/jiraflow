@@ -1,3 +1,4 @@
+/* jshint esnext: true */
 /* global Meteor, Match, check, Roles, Accounts */
 "use strict";
 
@@ -16,7 +17,7 @@ Meteor.methods({
             throw new Meteor.Error(403, "Permission denied");
         }
 
-        var userId = Accounts.createUser({
+        let userId = Accounts.createUser({
             username: email,
             email: email
         });

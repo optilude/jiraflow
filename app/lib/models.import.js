@@ -6,7 +6,7 @@ import { _ } from 'app-deps';
 
 // JIRA servers
 
-var Server = new SimpleSchema({
+const Server = new SimpleSchema({
     name: {
         type: String,
     },
@@ -18,7 +18,7 @@ var Server = new SimpleSchema({
     }
 });
 
-export var Servers = new Mongo.Collection("Servers");
+export const Servers = new Mongo.Collection("Servers");
 Servers.attachSchema(Server);
 Servers.allow({ // only (non-OAuth) admin users can manage servers
     insert: function(userId, doc) {
@@ -34,7 +34,7 @@ Servers.allow({ // only (non-OAuth) admin users can manage servers
 
 // Analysis parameters
 
-var Analysis = new SimpleSchema({
+const Analysis = new SimpleSchema({
     serverId: {
         type: String,
         regEx: SimpleSchema.RegEx.Id
@@ -50,7 +50,7 @@ var Analysis = new SimpleSchema({
     }
 });
 
-export var Analyses = new Mongo.Collection("Analyses");
+export const Analyses = new Mongo.Collection("Analyses");
 Analyses.attachSchema(Analysis);
 
 // to create, update or remove an analysis, the user must either be a
@@ -58,16 +58,16 @@ Analyses.attachSchema(Analysis);
 // server that matches the host the user logged in against
 
 function allowAnalysisModification(userId, doc, fields) {
-    var user = Meteor.user();
+    let user = Meteor.user();
     if(!user) {
         return false;
     }
 
     if(user.services.jira) {
-        var host = user.services.jira.host,
+        let host = user.services.jira.host,
             username = user.services.jira.username;
 
-        var server = Servers.findOne({host: host});
+        let server = Servers.findOne({host: host});
         if(!server) {
             return false;
         }
@@ -94,7 +94,7 @@ Analyses.allow({
 
 // Analysis cache - caches results from the task queue
 
-var AnalysisCacheEntry = new SimpleSchema({
+const AnalysisCacheEntry = new SimpleSchema({
     analysisId: {
         type: String,
         regEx: SimpleSchema.RegEx.Id
@@ -107,7 +107,7 @@ var AnalysisCacheEntry = new SimpleSchema({
     }
 });
 
-export var AnalysisCache = new Mongo.Collection("AnalysisCache");
+export const AnalysisCache = new Mongo.Collection("AnalysisCache");
 AnalysisCache.allow({ // server-side only!
     insert: function(userId, doc) {
         return  false;
@@ -133,8 +133,16 @@ if(Meteor.isServer) {
 
     Meteor.startup(function() {
         Servers._ensureIndex('host', { unique: true, sparse: true });
+
         AnalysisCache._ensureIndex('analysisId', { unique: false, sparse: true });
+        AnalysisCache._ensureIndex('expires', { unique: false, sparse: true });
     });
+
+    // Clear cache periodically, default every 5 minutes
+    Meteor.setInterval(function() {
+        let now = new Date();
+        AnalysisCache.remove({ "expires": { $lte: now } });
+    }, 1000 * 60 * (Meteor.settings.clearCacheInterval || 5));
 
     Meteor.publish("servers", function() {
         return Servers.find({}, {fields: {consumerKey: 0}});
@@ -145,7 +153,7 @@ if(Meteor.isServer) {
             return;
         }
 
-        var user = Meteor.users.findOne({_id: this.userId});
+        let user = Meteor.users.findOne({_id: this.userId});
 
         if(Roles.userIsInRole(this.userId, ['admin'])) {
             return Analyses.find();

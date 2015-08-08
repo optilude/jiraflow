@@ -1,5 +1,5 @@
 /* jshint esnext: true */
-/* global Meteor, Roles, Accounts, System, ServiceConfiguration, Assets, CeleryClient */
+/* global Meteor, Roles, Accounts, System, ServiceConfiguration, Assets */
 "use strict";
 
 import { _ } from 'app-deps';
@@ -10,7 +10,7 @@ import Constants from './constants';
 import 'lib/models';
 import './admin';
 import './reference';
-import './query';
+import './jira';
 
 // Perform application initialisation on startup
 
@@ -63,12 +63,12 @@ Meteor.startup(function () {
 
     // Create the initial admin user if one doesn't exist
 
-    var adminUser = Meteor.users.findOne({username: "admin"});
+    let adminUser = Meteor.users.findOne({username: "admin"});
 
     if(!adminUser) {
         console.warn("WARNING: Creating default admin user. Log in as 'admin@example.org' with password 'secret' and change the password!");
 
-        var userId = Accounts.createUser({
+        let userId = Accounts.createUser({
             'username': 'admin',
             'email': 'admin@example.org',
             'password': 'secret'
