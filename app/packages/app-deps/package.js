@@ -21,7 +21,7 @@ Npm.depends({
     "exposify": "0.4.3",
     "lodash": "3.10.0",
     "bootbox": "4.4.0",
-    "jira-connector": "1.2.1"
+    "jira-connector": "1.4.1"
 });
 
 // Note specific package versions embedded below as well.

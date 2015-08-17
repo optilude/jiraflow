@@ -3,7 +3,7 @@
 "use strict";
 
 import { JiraClient, moment } from 'app-deps';
-import { AnalysisCache } from 'lib/models';
+import { AnalysisCache, Servers } from 'lib/models';
 
 import Constants from './constants';
 import { CycleTime, StatusTypes } from './analysis/cycletime';
@@ -15,7 +15,7 @@ import { CycleTime, StatusTypes } from './analysis/cycletime';
 function fetchFromCache(id, remove) {
     let now = new Date();
 
-    let cached = AnalysisCache.find({ analysisId: id });
+    let cached = AnalysisCache.findOne({ analysisId: id });
     if(cached) {
         if((remove === undefined || remove) && cached.expires < now) {
             removeFromCache(id);
@@ -101,6 +101,10 @@ export function getProjects(jiraClient) {
      return cachedReferenceDataJiraCall(jiraClient.host + ':ref-projects', jiraClient.project, 'getAllProjects', {});
 }
 
+export function getProject(jiraClient, key) {
+     return cachedReferenceDataJiraCall(jiraClient.host + ':ref-projects-' + key, jiraClient.project, 'getProject', {projectIdOrKey: key});
+}
+
 export function getProjectComponents(jiraClient, project) {
     return cachedReferenceDataJiraCall(jiraClient.host + ':ref-projects-components-' + project, jiraClient.project, 'getComponents', { projectIdOrKey: project });
 }
@@ -182,28 +186,84 @@ Meteor.methods({
         this.unblock();
 
         let ct = new CycleTime(jiraClient, {
-            project: 'APE',
-            issueTypes: ['Story'],
+            project: 'DYB',
+            issueTypes: ['Feature'],
             validResolutions: ['Done'],
+
+            coreFields: {
+                epicLink: 'Epic Link',
+                rank: 'Rank',
+            },
+
+            customFields: {
+                releaseField: 'Fix Version/s',
+                sizeField: 'Tech impact',
+                teamField: 'Feature Team'
+            },
+
+            maxResults: 10,
+            
             cycle: [
                 {
-                    name: 'backlog',
+                    name: 'Backlog',
                     type: StatusTypes.backlog,
                     statuses: ["Open", "Reopened"],
-                    queue: false
+                    queue: false,
                 },
                 {
-                    name: 'development',
+                    name: 'Elaboration kickoff',
                     type: StatusTypes.accepted,
-                    statuses: ["In Progress", "Ready for Development", "Acceptance Criteria Sign-Off", "Awaiting QA"],
-                    queue: false
+                    statuses: ["Elaboration kick-off"],
+                    queue: false,
                 },
                 {
-                    name: 'done',
-                    type: StatusTypes.complete,
-                    statuses: ["Done", "Resolved"],
-                    queue: false
+                    name: 'Elaboration',
+                    type: StatusTypes.accepted,
+                    statuses: ["Elaboration", "Conceptual design"],
+                    queue: false,
                 },
+                {
+                    name: 'Elaboration Complete',
+                    type: StatusTypes.accepted,
+                    statuses: ["Ready for Build"],
+                    queue: true,
+                },
+                {
+                    name: 'Build',
+                    type: StatusTypes.accepted,
+                    statuses: ["Detailed design", "Ready for Dev", "In Progress", "Review"],
+                    queue: false,
+                },
+                {
+                    name: 'Build Complete',
+                    type: StatusTypes.completed,
+                    statuses: ["Build Complete"],
+                    queue: true,
+                },
+                {
+                    name: 'Integrate',
+                    type: StatusTypes.accepted,
+                    statuses: ["Integrate"],
+                    queue: false,
+                },
+                {
+                    name: 'Test',
+                    type: StatusTypes.accepted,
+                    statuses: ["E2E", "UAT", "Regression Test", "Ready for CAT", "Corporate Assurance Testing"],
+                    queue: false,
+                },
+                {
+                    name: 'Test Complete',
+                    type: StatusTypes.accepted,
+                    statuses: ["Ready for Deployment"],
+                    queue: false,
+                },
+                {
+                    name: 'Done',
+                    type: StatusTypes.completed,
+                    statuses: ["Done", "Closed"],
+                    queue: false,
+                }
             ]
         });
 
@@ -212,21 +272,28 @@ Meteor.methods({
 
     getJiraReferenceData: function() {
         let jiraClient = getJiraClient();
-        let projects = {};
 
         this.unblock();
 
-        getProjects(jiraClient).forEach(p => {
-            projects[p.key] = {
+        var server = Servers.findOne({host: jiraClient.host });
+        if(!server) {
+            throw new Meteor.Error("server-not-found", "Server configuration not found!");
+        }
+
+        var projects = server.projects? server.projects.map(p => { return getProject(jiraClient, p); }) : getProjects(jiraClient);
+        var projectInfo = {};
+
+        projects.forEach(p => {
+            projectInfo[p.key] = {
                 project: p,
-                components: getProjectComponents(jiraClient, p.key),
-                versions: getProjectVersions(jiraClient, p.key),
-                statuses: getProjectStatuses(jiraClient, p.key),
+                issueTypes: getProjectStatuses(jiraClient, p.key),
             };
         });
 
+
+
         return {
-            projects: projects,
+            projects: projectInfo,
             resolutions: getResolutions(jiraClient),
             statuses: getStatuses(jiraClient),
             statusCategories: getStatusCategories(jiraClient),

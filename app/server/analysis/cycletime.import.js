@@ -2,7 +2,7 @@
 /* global Meteor */
 "use strict";
 
-import { _ } from 'app-deps';
+import { moment, _ } from 'app-deps';
 import { QueryManager } from './querymanager';
 
 export const StatusTypes = {
@@ -83,7 +83,7 @@ export class CycleTime extends QueryManager {
             ]
         }, options);
 
-        options.cycleLookup = options.cycle.reduce((step, val, idx) => {
+        options.cycleLookup = options.cycle.reduce((val, step, idx) => {
             step.statuses.forEach(s => {
                 val[s] = {
                     index: idx,
@@ -108,16 +108,17 @@ export class CycleTime extends QueryManager {
      * holds the date that step was entered.
      */
     getCycleData() {
-
         let cycleNames = _.pluck(this.options.cycle, 'name');
         let acceptedSteps = _.pluck(this.options.cycle.filter(s => { return s.type === StatusTypes.accepted; }), 'name');
         let completedSteps = _.pluck(this.options.cycle.filter(s => { return s.type === StatusTypes.completed; }), 'name');
 
-        return this.findIssues().map(issue => {
+        let results = this.findIssues();
+
+        return results.issues.map(issue => {
 
             let item = {
                 key: issue.key,
-                url: this.jira.host + "/browse/" + issue.key,
+                url: 'https://' + this.jira.host + "/browse/" + issue.key,
                 issueType: issue.fields.issuetype.name,
                 summary: issue.fields.summary,
                 status: issue.fields.status.name,
@@ -167,10 +168,10 @@ export class CycleTime extends QueryManager {
                 if(item[cycleName] !== null) {
                     previousTimestamp = item[cycleName];
 
-                    if(acceptedTimestamp === null && previousTimestamp !== null && cycleName in acceptedSteps) {
+                    if(acceptedTimestamp === null && previousTimestamp !== null && _.contains(acceptedSteps, cycleName)) {
                         acceptedTimestamp = previousTimestamp;
                     }
-                    if(completedTimestamp === null && previousTimestamp !== null && cycleName in completedSteps) {
+                    if(completedTimestamp === null && previousTimestamp !== null && _.contains(completedSteps, cycleName)) {
                         completedTimestamp = previousTimestamp;
                     }
                 }
@@ -178,7 +179,7 @@ export class CycleTime extends QueryManager {
 
 
             if(acceptedTimestamp !== null && completedTimestamp !== null) {
-                item.cycleTime = completedTimestamp - acceptedTimestamp;
+                item.cycleTime = moment(completedTimestamp).diff(acceptedTimestamp, 'days') + 1;
                 item.completedTimestamp = completedTimestamp;
             }
 

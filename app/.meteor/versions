@@ -47,7 +47,7 @@ npm-bcrypt@0.7.8_2
 oauth@1.1.4
 oauth1@1.1.4
 observe-sequence@1.0.6
-optilude:jira-auth@0.0.3
+optilude:jira-auth@0.0.4
 ordered-dict@1.0.3
 random@1.0.3
 react@0.1.7

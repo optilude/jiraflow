@@ -119,7 +119,8 @@ var AddServer = React.createClass({
             error: false,
             name: "",
             host: "",
-            editors: ""
+            editors: "",
+            projects: ""
         };
     },
 
@@ -150,6 +151,7 @@ var AddServer = React.createClass({
                         <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
                         <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
                         <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
+                        <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
                     </form>
                 </div>
                 <div className='modal-footer'>
@@ -172,7 +174,8 @@ var AddServer = React.createClass({
         Servers.insert({
             name: this.state.name,
             host: this.state.host,
-            editors: this.state.editors.split(/[,\s]+/).filter( s => { return s; })
+            editors: this.state.editors.split(/[,\s]+/).filter( s => { return s; }),
+            projects: this.state.projects.split(/[,\s]+/).filter( s => { return s; })
         }, (err, _id) => {
             if(err) {
                 console.log(err);
@@ -204,7 +207,8 @@ var EditServer = React.createClass({
             error: false,
             name: this.props.server.name,
             host: this.props.server.host,
-            editors: this.props.server.editors? this.props.server.editors.join(", ") : ""
+            editors: this.props.server.editors? this.props.server.editors.join(", ") : "",
+            projects: this.props.server.projects? this.props.server.projects.join(", ") : ""
         };
     },
 
@@ -234,6 +238,7 @@ var EditServer = React.createClass({
                         <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
                         <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
                         <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
+                        <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
                     </form>
                 </div>
                 <div className='modal-footer'>
@@ -256,7 +261,8 @@ var EditServer = React.createClass({
             $set: {
                 name: this.state.name,
                 host: this.state.host,
-                editors: this.state.editors.split(/[,\s]+/).filter( s => { return s; })
+                editors: this.state.editors.split(/[,\s]+/).filter( s => { return s; }),
+                projects: this.state.projects.split(/[,\s]+/).filter( s => { return s; })
             }
         }, (err, _id) => {
             if(err) {

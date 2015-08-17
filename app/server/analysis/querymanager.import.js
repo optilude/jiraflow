@@ -1,8 +1,10 @@
 /* jshint esnext: true */
-/* global Meteor */
+/* global Meteor, Npm */
 "use strict";
 
 import { _, moment } from 'app-deps';
+
+const Future = Npm.require('fibers/future');
 
 export class Snapshot {
     constructor(data) {
@@ -56,18 +58,18 @@ export class QueryManager {
         }, {});
 
 
-        _.each(this.options.coreFields, function(name, field) {
+        _.each(this.options.coreFields, (name, field) => {
             this.options.coreFields[name] = fieldLookup[field] || null;
         });
 
-        _.each(this.options.customFields, function(name, field) {
+        _.each(this.options.customFields, (name, field) => {
             this.options.customFields[name] = fieldLookup[field] || null;
         });
     }
 
     iterChanges(issue, callback, includeResolutionChanges=true) {
 
-        let statusChanges = issue.changelog.histories.reduce((c, v) => {
+        let statusChanges = issue.changelog.histories.reduce((v, c) => {
             return v.concat(c.items);
         }, []).filter(h => { return h.field === 'status'; });
 
@@ -89,7 +91,7 @@ export class QueryManager {
             let changeDate = moment(change.created).toDate();
             let resolutions = change.items.filter(i => { return i.field === 'resolution'; });
 
-            isResolved = resolutions.length > 0? Boolean(resolutions[-1].to) : isResolved;
+            isResolved = resolutions.length > 0? Boolean(resolutions[resolutions.length - 1].to) : isResolved;
 
             change.items.forEach(item => {
                 if(item.field === 'status') {
@@ -119,7 +121,7 @@ export class QueryManager {
         });
     }
 
-    findIssues(jql=null, epics=null, order='KEY ASC', expand='changelog') {
+    findIssues(jql=null, epics=null, order='KEY ASC', expand=['changelog']) {
         let query = [];
 
         query.push('issueType IN (' + this.options.issueTypes.map(t => { return '"' + t + '"'; }).join(', ') + ')');
@@ -144,10 +146,25 @@ export class QueryManager {
 
         let queryString = query.join(' AND ') + " ORDER BY " + order;
 
-        return Meteor.wrapAsync(this.jira.search.search, this.jira.search)({
+        let future = new Future();
+
+        this.jira.search.search({
             jql: queryString,
             expand: expand,
-            maxResults: this.options.maxResults
+            maxResults: this.options.maxResults,
+            startAt: 0,
+            fields: [],
+            validateQuery: true
+        }, (err, results) => {
+            if(err) {
+                console.log("Error thrown whilst attempting to search for '" + queryString + "':" + err.errorMessages);
+                future.throw(err);
+                return;
+            }
+
+            future.return(results);
         });
+
+        return future.wait();
     }
 }

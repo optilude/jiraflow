@@ -25,6 +25,7 @@ Meteor.startup(function () {
                 loginStyle: Constants.LoginStyle,
                 consumerKey: Constants.ConsumerKey,
                 publicKey: Assets.getText(Constants.PublicKeyPath),
+                privateKey: Assets.getText(Constants.PrivateKeyPath), // XXX: Is this safe?
             }
         }
     );

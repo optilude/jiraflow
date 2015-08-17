@@ -14,7 +14,7 @@ export default React.createClass({
 
     getInitialState: function() {
         return {
-            host: "",
+            host: null,
             error: false
         };
     },
@@ -62,8 +62,13 @@ export default React.createClass({
     onSubmit: function(e) {
         e.preventDefault();
 
+        var host = this.state.host
+        if(host === null && this.data.servers.length > 0) {
+            host = this.data.servers[0].host;
+        }
+
         Meteor.loginWithJira({
-            jiraHost: this.state.host
+            jiraHost: host
         }, (err) => {
             if(err) {
                 console.log(err);

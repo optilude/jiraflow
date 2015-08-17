@@ -15,6 +15,10 @@ const Server = new SimpleSchema({
     },
     editors: {
         type: [String],
+    },
+    projects: {
+        type: [String],
+        optional: true
     }
 });
 
@@ -136,13 +140,13 @@ if(Meteor.isServer) {
 
         AnalysisCache._ensureIndex('analysisId', { unique: false, sparse: true });
         AnalysisCache._ensureIndex('expires', { unique: false, sparse: true });
-    });
 
-    // Clear cache periodically, default every 5 minutes
-    Meteor.setInterval(function() {
-        let now = new Date();
-        AnalysisCache.remove({ "expires": { $lte: now } });
-    }, 1000 * 60 * (Meteor.settings.clearCacheInterval || 5));
+        // Clear cache periodically, default every 5 minutes
+        Meteor.setInterval(function() {
+            let now = new Date();
+            AnalysisCache.remove({ "expires": { $lte: now } });
+        }, 1000 * 60 * (Meteor.settings.clearCacheInterval || 5));
+    });
 
     Meteor.publish("servers", function() {
         return Servers.find({}, {fields: {consumerKey: 0}});
