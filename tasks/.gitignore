@@ -1,7 +1,0 @@
-bin
-include
-lib
-.Python
-**/*.pyc
-man
-share

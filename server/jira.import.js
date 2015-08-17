@@ -1,5 +1,5 @@
 /* jshint esnext: true */
-/* global Meteor, ServiceConfiguration, Assets, Celery */
+/* global Meteor, ServiceConfiguration, Assets */
 "use strict";
 
 import { JiraClient, moment } from 'app-deps';
@@ -142,39 +142,6 @@ export function getPriorities(jiraClient) {
 }
 
 /*
- * Celery helpers
- */
-
-export function runCeleryTask(taskName, ...params) {
-     let task = Celery.createTask(taskName);
-     return task.invokeSync(params).wait().result;
-}
-
-export function runJiraTask(taskName, ...params) {
-    let user = Meteor.user();
-    if(!user || !user.services.jira) {
-        throw new Meteor.Error("not-authenticated-with-jira", "Current user is not authenticated against a JIRA instance");
-    }
-
-    let config = ServiceConfiguration.configurations.findOne({service: "jira"});
-    if(!config) {
-        throw new Meteor.Error("jira-authentication-not-configured", "JIRA authentication is not configured");
-    }
-
-    let options = {
-        host: 'https://' + user.services.jira.host,
-        oauth: {
-            consumer_key: config.consumerKey,
-            key_cert: Assets.getText(Constants.PrivateKeyPath),
-            access_token: user.services.jira.accessToken,
-            access_token_secret: user.services.jira.accessTokenSecret
-        }
-    };
-
-    return runCeleryTask(taskName, [options].concat(params));
-}
-
-/*
  * Meteor methods exposing relevant APIs
  */
 
@@ -202,7 +169,7 @@ Meteor.methods({
             },
 
             maxResults: 10,
-            
+
             cycle: [
                 {
                     name: 'Backlog',

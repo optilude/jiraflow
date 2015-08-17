@@ -15,4 +15,3 @@ universe:modules
 app-deps
 service-configuration
 optilude:jira-auth
-3stack:celery-connect
