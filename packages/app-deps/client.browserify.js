@@ -22,6 +22,7 @@ Dependencies = {
     Router: require('react-router'),
     ReactBootstrap: require('react-bootstrap'),
     ReactRouterBootstrap: require('react-router-bootstrap'),
+    ReactSelect: require('react-select'),
 
     JiraClient: require('jira-connector')
 };

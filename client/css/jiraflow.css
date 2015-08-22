@@ -6,7 +6,7 @@ body {
  * Loading indicator
  */
 
-.please-wait .modal.in {
+.please-wait .modal {
     position: inherit;
 }
 

@@ -5,17 +5,18 @@
 
 import { _, ReactBootstrap } from 'app-deps';
 
-import analysisTypes from './index';
-
-// TODO: Look up component based on type selected by user, render, create analysis
+import Loading from '../loading';
 
 export default React.createClass({
     displayName: 'NewAnalysis',
 
     render: function() {
         return (
-            <div className="">
-
+            <div>
+                <h1 className="page-header">New analysis</h1>
+                <p className="help-block">
+                    Configure a new analysis.
+                </p>
             </div>
         );
     }

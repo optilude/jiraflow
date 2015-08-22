@@ -11,6 +11,10 @@ import AdminServers from './components/admin/servers';
 
 import Authenticate from './components/authenticate';
 
+import NewAnalysis from './components/analysis/new';
+import EditAnalysis from './components/analysis/edit';
+import ViewAnalysis from './components/analysis/view';
+
 import App from './components/app';
 import Home from './components/home';
 
@@ -34,6 +38,10 @@ Meteor.startup(() => {
         // App
         <Route name="home" path="/" handler={App}>
             <DefaultRoute handler={Home} />
+
+            <Route name="analysisNew" path="/new-analysis" handler={NewAnalysis}/>
+            <Route name="analysisEdit" path="/analysis/:id/edit" handler={EditAnalysis}/>
+            <Route name="analysisView" path="/analysis/:id" handler={ViewAnalysis}/>
 
             <Route name="adminUsers" path="admin/users" handler={AdminUsers}/>
             <Route name="adminCreateUser" path="admin/create-user" handler={CreateUser}/>

@@ -4,10 +4,10 @@
 
 import { _, Router, ReactBootstrap } from 'app-deps';
 
-var { Alert, Input, Button } = ReactBootstrap;
-var { Link } = Router;
+const { Alert, Input, Button } = ReactBootstrap;
+const { Link } = Router;
 
-export var Login = React.createClass({
+export const Login = React.createClass({
     displayName: 'Login',
     mixins: [React.addons.LinkedStateMixin, Router.Navigation],
 
@@ -84,7 +84,7 @@ export var Login = React.createClass({
 
 });
 
-export var ResetPassword = React.createClass({
+export const ResetPassword = React.createClass({
     displayName: 'ResetPassword',
     mixins: [React.addons.LinkedStateMixin, Router.State, Router.Navigation],
 
@@ -136,7 +136,7 @@ export var ResetPassword = React.createClass({
 
 });
 
-export var EnrollAccount = React.createClass({
+export const EnrollAccount = React.createClass({
     displayName: 'ResetPassword',
     mixins: [React.addons.LinkedStateMixin, Router.State, Router.Navigation],
 
@@ -188,7 +188,7 @@ export var EnrollAccount = React.createClass({
 
 });
 
-export var ChangePassword = React.createClass({
+export const ChangePassword = React.createClass({
     displayName: 'ChangePassword',
     mixins: [React.addons.LinkedStateMixin, Router.Navigation],
 

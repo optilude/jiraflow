@@ -4,10 +4,10 @@
 
 import { _, Router, ReactBootstrap } from 'app-deps';
 
-var { Link } = Router;
-var { Alert, Input, Button } = ReactBootstrap;
+const { Link } = Router;
+const { Alert, Input, Button } = ReactBootstrap;
 
-export var AdminUsers = React.createClass({
+export const AdminUsers = React.createClass({
     displayName: 'AdminUsers',
 
     render: function() {
@@ -25,7 +25,7 @@ export var AdminUsers = React.createClass({
 
 });
 
-export var ManageUsers = React.createClass({
+export const ManageUsers = React.createClass({
     displayName: 'ManageUsers',
 
     render: function() {
@@ -49,7 +49,7 @@ export var ManageUsers = React.createClass({
 
 });
 
-export var CreateUser = React.createClass({
+export const CreateUser = React.createClass({
     displayName: 'CreateUser',
     mixins: [React.addons.LinkedStateMixin, Router.Navigation],
 
@@ -99,7 +99,7 @@ export var CreateUser = React.createClass({
             this.setState({invalid: false, error: false, errorMessage: ""});
         }
 
-        var role = this.state.role? this.state.role : "read";
+        let role = this.state.role? this.state.role : "read";
 
         Meteor.call("createNewUser", this.state.email, role, err => {
             if(err) {

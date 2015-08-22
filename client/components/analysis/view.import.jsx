@@ -6,7 +6,7 @@
 import { _, ReactBootstrap } from 'app-deps';
 
 export default React.createClass({
-    displayName: 'EditAnalysis',
+    displayName: 'ViewAnalysis',
 
     render: function() {
         return (

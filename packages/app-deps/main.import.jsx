@@ -11,4 +11,5 @@ export const bootbox = Dependencies.bootbox;
 export const Router = Dependencies.Router;
 export const ReactBootstrap = Dependencies.ReactBootstrap;
 export const ReactRouterBootstrap = Dependencies.ReactRouterBootstrap;
+export const ReactSelect = Dependencies.ReactSelect;
 export const JiraClient = Dependencies.JiraClient;

@@ -5,24 +5,25 @@
 
 import { _, ReactBootstrap } from 'app-deps';
 
-var { Modal, ProgressBar } = ReactBootstrap;
+const { Modal, ProgressBar } = ReactBootstrap;
 
 export default React.createClass({
     displayName: 'Loading',
 
     render: function() {
         return (
-            <div className="please-wait modal-open">
-                <Modal
-                    title='Please wait...'
+            <div className="please-wait">
+                <Modal.Dialog
                     backdrop={false}
                     animation={false}
-                    closeButton={false}
-                    onRequestHide={() => {}}>
-                    <div className='modal-body'>
+                    onHide={() => {}}>
+                    <Modal.Header>
+                        <Modal.Title>Please wait&hellip;</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
                         <ProgressBar active now={100} />
-                    </div>
-                </Modal>
+                    </Modal.Body>
+                </Modal.Dialog>
             </div>
         );
     }

@@ -6,7 +6,7 @@ import { _, Router, ReactBootstrap } from 'app-deps';
 import { Servers } from 'lib/models';
 import Loading from './loading';
 
-var { Alert, Button, Input } = ReactBootstrap;
+const { Alert, Button, Input } = ReactBootstrap;
 
 export default React.createClass({
     displayName: 'Authenticate',
@@ -20,7 +20,7 @@ export default React.createClass({
     },
 
     getMeteorData: function() {
-        var handle = Meteor.subscribe("servers");
+        let handle = Meteor.subscribe("servers");
 
         return {
             ready: handle.ready(),
@@ -62,7 +62,7 @@ export default React.createClass({
     onSubmit: function(e) {
         e.preventDefault();
 
-        var host = this.state.host
+        let host = this.state.host
         if(host === null && this.data.servers.length > 0) {
             host = this.data.servers[0].host;
         }

@@ -3,7 +3,7 @@
 "use strict";
 
 import { JiraClient, moment } from 'app-deps';
-import { AnalysisCache, Servers } from 'lib/models';
+import { AnalysisCache, Analysis, Servers } from 'lib/models';
 
 import Constants from './constants';
 import { CycleTime, StatusTypes } from './analysis/cycletime';
@@ -147,108 +147,43 @@ export function getPriorities(jiraClient) {
 
 Meteor.methods({
 
-    getCycleData: function() {
-        let jiraClient = getJiraClient();
+    getCycleData: function(analysisId, force=false, cacheExpiry=3600) {
+
+        var cacheId = 'analysis:' + analysisId;
+
+        let cached = fetchFromCache(cacheId, false);
+        if(cached !== null) {
+            return cached;
+        }
 
         this.unblock();
 
-        let ct = new CycleTime(jiraClient, {
-            project: 'DYB',
-            issueTypes: ['Feature'],
-            validResolutions: ['Done'],
+        let jiraClient = getJiraClient();
+        let analysis = Analysis.findOne(analysisId);
+        let ct = new CycleTime(jiraClient, analysis.parameters);
+        let results = ct.getCycleData();
 
-            coreFields: {
-                epicLink: 'Epic Link',
-                rank: 'Rank',
-            },
+        return storeInCache(
+            cacheId,
+            cacheExpiry,
+            results
+        );
 
-            customFields: {
-                releaseField: 'Fix Version/s',
-                sizeField: 'Tech impact',
-                teamField: 'Feature Team'
-            },
-
-            maxResults: 10,
-
-            cycle: [
-                {
-                    name: 'Backlog',
-                    type: StatusTypes.backlog,
-                    statuses: ["Open", "Reopened"],
-                    queue: false,
-                },
-                {
-                    name: 'Elaboration kickoff',
-                    type: StatusTypes.accepted,
-                    statuses: ["Elaboration kick-off"],
-                    queue: false,
-                },
-                {
-                    name: 'Elaboration',
-                    type: StatusTypes.accepted,
-                    statuses: ["Elaboration", "Conceptual design"],
-                    queue: false,
-                },
-                {
-                    name: 'Elaboration Complete',
-                    type: StatusTypes.accepted,
-                    statuses: ["Ready for Build"],
-                    queue: true,
-                },
-                {
-                    name: 'Build',
-                    type: StatusTypes.accepted,
-                    statuses: ["Detailed design", "Ready for Dev", "In Progress", "Review"],
-                    queue: false,
-                },
-                {
-                    name: 'Build Complete',
-                    type: StatusTypes.completed,
-                    statuses: ["Build Complete"],
-                    queue: true,
-                },
-                {
-                    name: 'Integrate',
-                    type: StatusTypes.accepted,
-                    statuses: ["Integrate"],
-                    queue: false,
-                },
-                {
-                    name: 'Test',
-                    type: StatusTypes.accepted,
-                    statuses: ["E2E", "UAT", "Regression Test", "Ready for CAT", "Corporate Assurance Testing"],
-                    queue: false,
-                },
-                {
-                    name: 'Test Complete',
-                    type: StatusTypes.accepted,
-                    statuses: ["Ready for Deployment"],
-                    queue: false,
-                },
-                {
-                    name: 'Done',
-                    type: StatusTypes.completed,
-                    statuses: ["Done", "Closed"],
-                    queue: false,
-                }
-            ]
-        });
-
-        return ct.getCycleData();
     },
 
     getJiraReferenceData: function() {
-        let jiraClient = getJiraClient();
 
         this.unblock();
 
-        var server = Servers.findOne({host: jiraClient.host });
+        let jiraClient = getJiraClient();
+
+        let server = Servers.findOne({host: jiraClient.host });
         if(!server) {
             throw new Meteor.Error("server-not-found", "Server configuration not found!");
         }
 
-        var projects = server.projects? server.projects.map(p => { return getProject(jiraClient, p); }) : getProjects(jiraClient);
-        var projectInfo = {};
+        let projects = server.projects? server.projects.map(p => { return getProject(jiraClient, p); }) : getProjects(jiraClient);
+        let projectInfo = {};
 
         projects.forEach(p => {
             projectInfo[p.key] = {

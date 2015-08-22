@@ -4,7 +4,7 @@
 
 import { _, Router } from 'app-deps';
 
-var { Link } = Router;
+const { Link } = Router;
 
 export default React.createClass({
     displayName: 'Home',

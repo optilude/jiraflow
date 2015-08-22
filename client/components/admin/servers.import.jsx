@@ -7,15 +7,15 @@ import { Servers } from 'lib/models';
 
 import Loading from '../loading';
 
-var { Link } = Router;
-var { Alert, Input, Button, ButtonToolbar, PanelGroup, Panel, Modal } = ReactBootstrap;
+const { Link } = Router;
+const { Alert, Input, Button, ButtonToolbar, PanelGroup, Panel, Modal } = ReactBootstrap;
 
 export default React.createClass({
     displayName: 'AdminServers',
     mixins: [ReactMeteorData],
 
     getMeteorData: function() {
-        var handle = Meteor.subscribe("servers");
+        let handle = Meteor.subscribe("servers");
 
         return {
             ready: handle.ready(),
@@ -68,7 +68,7 @@ export default React.createClass({
 
 });
 
-var ManageServers = React.createClass({
+const ManageServers = React.createClass({
     displayName: "ManageServers",
 
     propTypes: {
@@ -108,13 +108,13 @@ var ManageServers = React.createClass({
 
 });
 
-var AddServer = React.createClass({
+const AddServer = React.createClass({
     displayName: 'AddServer',
-    mixins: [ReactBootstrap.OverlayMixin, React.addons.LinkedStateMixin],
+    mixins: [React.addons.LinkedStateMixin],
 
     getInitialState: function() {
         return {
-            isModalOpen: false,
+            showModal: false,
             invalid: false,
             error: false,
             name: "",
@@ -124,47 +124,46 @@ var AddServer = React.createClass({
         };
     },
 
-    handleToggle: function() {
-        this.setState({
-            isModalOpen: !this.state.isModalOpen
-        });
+    close: function() {
+        this.setState({ showModal: false });
+    },
+
+    open: function() {
+        this.setState({ showModal: true });
     },
 
     render: function() {
         return (
-            <Button onClick={this.handleToggle} bsStyle='success'>Add server</Button>
+            <span>
+                <Button onClick={this.open} bsStyle='success'>Add server</Button>
 
-        );
-    },
+                <Modal show={this.state.showModal} onHide={this.close}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Add server</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.invalid? <Alert bsStyle='danger'>Name and host are both required</Alert> : ""}
+                        {this.state.error? <Alert bsStyle='danger'>An unexpected error ocurred. Please try again.</Alert> : ""}
+                        <form className="form-horizontal" onSubmit={this.createProject}>
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
+                            <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
+                            <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
+                            <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
+                        </form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.close}>Close</Button>
+                        <Button bsStyle='primary' onClick={this.createServer}>Create</Button>
+                    </Modal.Footer>
+                </Modal>
 
-    renderOverlay: function() {
-        if (!this.state.isModalOpen) {
-            return <span/>;
-        }
-
-        return (
-            <Modal title='Add server' onRequestHide={this.handleToggle}>
-                <div className='modal-body'>
-                    {this.state.invalid? <Alert bsStyle='danger'>Name and host are both required</Alert> : ""}
-                    {this.state.error? <Alert bsStyle='danger'>An unexpected error ocurred. Please try again.</Alert> : ""}
-                    <form className="form-horizontal" onSubmit={this.createProject}>
-                        <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
-                        <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
-                        <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
-                        <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
-                    </form>
-                </div>
-                <div className='modal-footer'>
-                    <Button onClick={this.handleToggle}>Close</Button>
-                    <Button bsStyle='primary' onClick={this.createServer}>Create</Button>
-                </div>
-            </Modal>
+            </span>
         );
     },
 
     createServer: function() {
 
-        var invalid = (!this.state.name || !this.state.host);
+        let invalid = (!this.state.name || !this.state.host);
         if(invalid) {
             this.setState({invalid: true, error: false});
             return;
@@ -181,7 +180,7 @@ var AddServer = React.createClass({
                 console.log(err);
                 this.setState({invalid: false, error: true});
             } else {
-                this.handleToggle();
+                this.close();
                 this.setState({
                     name: "",
                     host: ""
@@ -192,9 +191,9 @@ var AddServer = React.createClass({
 
 });
 
-var EditServer = React.createClass({
+const EditServer = React.createClass({
     displayName: 'EditServer',
-    mixins: [ReactBootstrap.OverlayMixin, React.addons.LinkedStateMixin],
+    mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
         server: React.PropTypes.object.isRequired
@@ -202,7 +201,7 @@ var EditServer = React.createClass({
 
     getInitialState: function() {
         return {
-            isModalOpen: false,
+            showModal: false,
             invalid: false,
             error: false,
             name: this.props.server.name,
@@ -212,45 +211,45 @@ var EditServer = React.createClass({
         };
     },
 
-    handleToggle: function() {
-        this.setState({
-            isModalOpen: !this.state.isModalOpen
-        });
+    close: function() {
+        this.setState({ showModal: false });
+    },
+
+    open: function() {
+        this.setState({ showModal: true });
     },
 
     render: function() {
         return (
-            <Button onClick={this.handleToggle} bsSize="small" bsStyle="default">Edit</Button>
-        );
-    },
+            <span>
+                <Button onClick={this.open} bsSize="small" bsStyle="default">Edit</Button>
 
-    renderOverlay: function() {
-        if (!this.state.isModalOpen) {
-            return <span/>;
-        }
+                <Modal show={this.state.showModal} onHide={this.close}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Edit server</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.invalid? <Alert bsStyle='danger'>Name and host are both required</Alert> : ""}
+                        {this.state.error? <Alert bsStyle='danger'>An unexpected error ocurred. Please try again.</Alert> : ""}
+                        <form className="form-horizontal" onSubmit={this.modifyProject}>
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
+                            <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
+                            <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
+                            <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
+                        </form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.close}>Close</Button>
+                        <Button bsStyle='primary' onClick={this.modifyServer}>Modify</Button>
+                    </Modal.Footer>
+                </Modal>
 
-        return (
-            <Modal title='Edit server' onRequestHide={this.handleToggle}>
-                <div className='modal-body'>
-                    {this.state.invalid? <Alert bsStyle='danger'>Name and host are both required</Alert> : ""}
-                    {this.state.error? <Alert bsStyle='danger'>An unexpected error ocurred. Please try again.</Alert> : ""}
-                    <form className="form-horizontal" onSubmit={this.modifyProject}>
-                        <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='My server' />
-                        <Input valueLink={this.linkState('host')} type='text' label='Host' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='myserver.atlassian.net' />
-                        <Input valueLink={this.linkState('editors')} type='textarea' label='Editors' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='user1, user2' />
-                        <Input valueLink={this.linkState('projects')} type='textarea' label='Projects' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='ABC, DEF' />
-                    </form>
-                </div>
-                <div className='modal-footer'>
-                    <Button onClick={this.handleToggle}>Close</Button>
-                    <Button bsStyle='primary' onClick={this.modifyServer}>Modify</Button>
-                </div>
-            </Modal>
+            </span>
         );
     },
 
     modifyServer: function() {
-        var invalid = (!this.state.name || !this.state.host);
+        let invalid = (!this.state.name || !this.state.host);
         if(invalid) {
             this.setState({invalid: true, error: false});
             return;
@@ -269,16 +268,15 @@ var EditServer = React.createClass({
                 console.log(err);
                 this.setState({invalid: false, error: true});
             } else {
-                this.handleToggle();
+                this.close();
             }
         });
     }
 
 });
 
-var ConfigureJira = React.createClass({
+const ConfigureJira = React.createClass({
     displayName: 'ConfigureJira',
-    mixins: [ReactBootstrap.OverlayMixin],
 
     propTypes: {
         details: React.PropTypes.object.isRequired
@@ -286,90 +284,91 @@ var ConfigureJira = React.createClass({
 
     getInitialState: function() {
         return {
-            isModalOpen: false,
+            showModal: false,
         };
     },
 
-    handleToggle: function() {
-        this.setState({
-            isModalOpen: !this.state.isModalOpen
-        });
+    close: function() {
+        this.setState({ showModal: false });
+    },
+
+    open: function() {
+        this.setState({ showModal: true });
     },
 
     render: function() {
         return (
-            <Button onClick={this.handleToggle} bsStyle="link">How to configure JIRA</Button>
+            <span>
+                <Button onClick={this.open} bsStyle="link">How to configure JIRA</Button>
+
+                <Modal show={this.state.showModal} onHide={this.close}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>How to configure JIRA</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>
+                            Before users of JiraFlow can authenticate against a
+                            given JIRA instance, you must first configure the remote
+                            JIRA instance to accept JiraFlow as an inbound
+                            authentication link.
+                        </p>
+                        <ol className="jira-configuration-instructions">
+                            <li>Log in as an administrator and find <em>Application Links</em> under <em>Add-ons</em> in JIRA settings.</li>
+                            <li>Create a new application link. You have to enter a URL, but it doesn't need to exist. In fact, it will be faster if it doesn't, so enter e.g. <code>http://localhost:8080</code>.</li>
+                            <li>Click <em>Continue</em> and enter the following values
+                                <dl>
+                                    <dt>Application name:</dt>
+                                    <dd><code>JiraFlow</code></dd>
+
+                                    <dt>Application type:</dt>
+                                    <dd><code>Generic application</code></dd>
+
+                                    <dt>Service provider name:</dt>
+                                    <dd><code>JiraFlow</code> (it doesn't actually matter)</dd>
+
+                                    <dt>Consumer key:</dt>
+                                    <dd><code>{this.props.details.consumerKey}</code></dd>
+
+                                    <dt>Shared secret:</dt>
+                                    <dd><code>JiraFlow</code></dd>
+
+                                    <dt>Request token URL:</dt>
+                                    <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
+
+                                    <dt>Access token URL:</dt>
+                                    <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
+
+                                    <dt>Authorize token URL:</dt>
+                                    <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
+
+                                    <dt>Create incoming link:</dt>
+                                    <dd>Tick the box</dd>
+                                </dl>
+                            </li>
+                            <li>Click <em>Continue</em> again and on the next page, enter:
+                                <dl>
+                                    <dt>Consumer key:</dt>
+                                    <dd><code>{this.props.details.consumerKey}</code></dd>
+
+                                    <dt>Consumer name:</dt>
+                                    <dd><code>JiraFlow</code></dd>
+
+                                    <dt>Public key:</dt>
+                                    <dd><pre>{this.props.details.publicKey}</pre></dd>
+                                </dl>
+                            </li>
+                            <li>Click <em>Continue</em> one last time, and then wait until it completes.</li>
+                            <li>Edit the newly created link, and go to <em>Outgoing authentication</em>.</li>
+                            <li>Click <em>Delete</em> to remove it. We won't need it, but JIRA insists that it is configured before incoming authentication.</li>
+                        </ol>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.close}>Close</Button>
+                    </Modal.Footer>
+                </Modal>
+
+            </span>
         );
     },
 
-    renderOverlay: function() {
-        if (!this.state.isModalOpen) {
-            return <span/>;
-        }
-
-        return (
-            <Modal title='Configuring JIRA' onRequestHide={this.handleToggle}>
-                <div className='modal-body'>
-                    <p>
-                        Before users of JiraFlow can authenticate against a
-                        given JIRA instance, you must first configure the remote
-                        JIRA instance to accept JiraFlow as an inbound
-                        authentication link.
-                    </p>
-                    <ol className="jira-configuration-instructions">
-                        <li>Log in as an administrator and find <em>Application Links</em> under <em>Add-ons</em> in JIRA settings.</li>
-                        <li>Create a new application link. You have to enter a URL, but it doesn't need to exist. In fact, it will be faster if it doesn't, so enter e.g. <code>http://localhost:8080</code>.</li>
-                        <li>Click <em>Continue</em> and enter the following values
-                            <dl>
-                                <dt>Application name:</dt>
-                                <dd><code>JiraFlow</code></dd>
-
-                                <dt>Application type:</dt>
-                                <dd><code>Generic application</code></dd>
-
-                                <dt>Service provider name:</dt>
-                                <dd><code>JiraFlow</code> (it doesn't actually matter)</dd>
-
-                                <dt>Consumer key:</dt>
-                                <dd><code>{this.props.details.consumerKey}</code></dd>
-
-                                <dt>Shared secret:</dt>
-                                <dd><code>JiraFlow</code></dd>
-
-                                <dt>Request token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
-
-                                <dt>Access token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
-
-                                <dt>Authorize token URL:</dt>
-                                <dd><code>http://localhost</code> (it doesn't actually matter)</dd>
-
-                                <dt>Create incoming link:</dt>
-                                <dd>Tick the box</dd>
-                            </dl>
-                        </li>
-                        <li>Click <em>Continue</em> again and on the next page, enter:
-                            <dl>
-                                <dt>Consumer key:</dt>
-                                <dd><code>{this.props.details.consumerKey}</code></dd>
-
-                                <dt>Consumer name:</dt>
-                                <dd><code>JiraFlow</code></dd>
-
-                                <dt>Public key:</dt>
-                                <dd><pre>{this.props.details.publicKey}</pre></dd>
-                            </dl>
-                        </li>
-                        <li>Click <em>Continue</em> one last time, and then wait until it completes.</li>
-                        <li>Edit the newly created link, and go to <em>Outgoing authentication</em>.</li>
-                        <li>Click <em>Delete</em> to remove it. We won't need it, but JIRA insists that it is configured before incoming authentication.</li>
-                    </ol>
-                </div>
-                <div className='modal-footer'>
-                    <Button onClick={this.handleToggle}>Close</Button>
-                </div>
-            </Modal>
-        );
-    }
 });

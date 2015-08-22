@@ -13,15 +13,16 @@ Package.describe({
 // `required()`d in `client.browserify.js` and `server.js`.
 
 Npm.depends({
-    "classnames": "2.1.2",
-    "moment": "2.10.3",
-    "react-bootstrap": "0.23.5",
+    "classnames": "2.1.3",
+    "moment": "2.10.6",
+    "react-bootstrap": "0.24.5",
     "react-router": "0.13.3",
-    "react-router-bootstrap": "0.16.0",
+    "react-router-bootstrap": "0.18.1",
     "exposify": "0.4.3",
-    "lodash": "3.10.0",
+    "lodash": "3.10.1",
     "bootbox": "4.4.0",
-    "jira-connector": "1.4.1"
+    "jira-connector": "1.4.1",
+    "react-select": "0.6.3"
 });
 
 // Note specific package versions embedded below as well.
