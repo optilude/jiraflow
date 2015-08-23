@@ -171,6 +171,16 @@ Meteor.methods({
 
     },
 
+    getJiraConfigurationDetails: function() {
+        return ServiceConfiguration.configurations.findOne({service: "jira"}, {
+            fields: {
+                loginStyle: 1,
+                consumerKey: 1,
+                publicKey: 1
+            }
+        });
+    },
+
     getJiraReferenceData: function() {
 
         this.unblock();
@@ -188,11 +198,9 @@ Meteor.methods({
         projects.forEach(p => {
             projectInfo[p.key] = {
                 project: p,
-                issueTypes: getProjectStatuses(jiraClient, p.key),
+                statuses: getProjectStatuses(jiraClient, p.key),
             };
         });
-
-
 
         return {
             projects: projectInfo,

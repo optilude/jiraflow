@@ -9,7 +9,6 @@ import Constants from './constants';
 // imports with side-effects
 import 'lib/models';
 import './admin';
-import './reference';
 import './jira';
 
 // Perform application initialisation on startup
