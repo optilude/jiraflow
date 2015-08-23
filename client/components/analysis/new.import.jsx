@@ -107,7 +107,7 @@ const AnalysisForm = React.createClass({
                 <div className="form-group">
                     <label htmlFor="inputIssueTypes" className="col-xs-3 control-label">Issue types</label>
                     <div className="col-xs-9">
-                        <Select multi
+                        <Select mult
                             id="inputIssueTypes"
                             name="issueTypes"
                             options={issueTypes}
@@ -123,7 +123,7 @@ const AnalysisForm = React.createClass({
                 <div className="form-group">
                     <label htmlFor="inputResolutions" className="col-xs-3 control-label">Valid resolutions</label>
                     <div className="col-xs-9">
-                        <Select multi
+                        <Select
                             id="inputResolutions"
                             name="validResolutions"
                             options={resolutions}
@@ -138,7 +138,7 @@ const AnalysisForm = React.createClass({
                 <div className="form-group">
                     <label htmlFor="inputFields" className="col-xs-3 control-label">Additional fields</label>
                     <div className="col-xs-9">
-                        <Select multi
+                        <Select
                             id="inputFields"
                             name="customFields"
                             options={customFields}
@@ -224,11 +224,28 @@ export default React.createClass({
                     <div className="col-xs-8">
                         <AnalysisForm referenceData={this.state.referenceData} onSubmit={this.create}/>
                     </div>
-                    <div className="col-xs-3 col-xs-offset-1">
-                        <p className="help-block">
+                    <div className="col-xs-3 col-xs-offset-1 help-block">
+                        <p>
                             Use this form to configure an analysis. Others who log in against
                             the same JIRA instance will be able to view it. Anyone in
                             the list of editors will be able to edit it.
+                        </p>
+                        <p>
+                            The analysis will run on issues in the selected project and of
+                            the selected type(s).
+                        </p>
+                        <p>
+                            Choose one or more resolutions to allow. This will usually
+                            include <em>Done</em>. Unresolved issues are included, but
+                            other issues will be ignored.
+                        </p>
+                        <p>
+                            By choosing additional fields to include, you can allow the
+                            user viewing the analysis to apply further filters and slices.
+                        </p>
+                        <p>
+                            Finally, if you need to filter on anything else, add a snippet
+                            of JQL to the <em>Additional JQL filter</em> box.
                         </p>
                     </div>
                 </div>
