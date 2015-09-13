@@ -3,12 +3,11 @@
 
 "use strict";
 
-import { _, classNames, ReactBootstrap } from 'app-deps';
+import { _, classNames, ReactBootstrap, ReactSelect as Select } from 'app-deps';
 import { StatusTypes } from 'lib/models';
 
 const { Label, Panel, Modal, Alert, Input, Button } = ReactBootstrap;
 
-// TODO: Implement abililty to add custom statuses
 // TODO: Column re-ordering via drag-and-drop
 // TODO: Status assignment via drag-and-drop
 
@@ -40,6 +39,7 @@ const NewColumn = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
+        knownStatuses: React.PropTypes.array.isRequired,
         onCreate: React.PropTypes.func.isRequired,
     },
 
@@ -48,7 +48,8 @@ const NewColumn = React.createClass({
             showModal: false,
             invalid: false,
             name: null,
-            type: null
+            type: StatusTypes.backlog,
+            statuses: []
         };
     },
 
@@ -61,6 +62,15 @@ const NewColumn = React.createClass({
     },
 
     render: function() {
+
+        const selectLink = (field, multiple) => {
+            return (v, m) => {
+                let opts = {};
+                opts[field] = multiple? _.pluck(m, 'value') : v;
+                this.setState(opts);
+            };
+        };
+
         return (
             <span>
                 <Panel className="kanban-col kanban-col-new" bsStyle="default" onClick={this.open}>
@@ -74,13 +84,25 @@ const NewColumn = React.createClass({
                     <Modal.Body>
                         {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
                         <form className="form-horizontal" onSubmit={this.create}>
-                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='In progress' />
-                            <Input valueLink={this.linkState('type')} type='select' label='Type' labelClassName="col-xs-2" wrapperClassName="col-xs-10">
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='In progress' />
+                            <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-3" wrapperClassName="col-xs-9">
                                 <option value={StatusTypes.backlog}>Backlog</option>
                                 <option value={StatusTypes.accepted}>In progress</option>
                                 <option value="_queue">Queue</option>
                                 <option value={StatusTypes.completed}>Completed</option>
                             </Input>
+                            <div className="form-group">
+                                <label className="col-xs-3 control-label">JIRA statuses</label>
+                                <div className="col-xs-9">
+                                    <Select
+                                        multi={true}
+                                        options={this.props.knownStatuses.map(s => { return { value: s, label: s }; })}
+                                        allowCreate={true}
+                                        value={this.state.statuses}
+                                        onChange={selectLink('statuses', true)}
+                                    />
+                                </div>
+                            </div>
                         </form>
                     </Modal.Body>
                     <Modal.Footer>
@@ -96,7 +118,7 @@ const NewColumn = React.createClass({
     create: function(e) {
         e.preventDefault();
 
-        let invalid = (!this.state.name || !this.state.type);
+        let invalid = !this.state.name;
         if(invalid) {
             this.setState({invalid: true});
             return;
@@ -106,7 +128,7 @@ const NewColumn = React.createClass({
             name: this.state.name,
             type: this.state.type === "_queue"? StatusTypes.accepted : this.state.type,
             queue: this.state.type === "_queue"? true : false,
-            statuses: []
+            statuses: this.state.statuses
         });
 
         this.setState(this.getInitialState());
@@ -119,6 +141,7 @@ const EditColumn = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
+        knownStatuses: React.PropTypes.array.isRequired,
         state: React.PropTypes.object.isRequired,
         onEdit: React.PropTypes.func.isRequired,
     },
@@ -128,7 +151,8 @@ const EditColumn = React.createClass({
             showModal: false,
             invalid: false,
             name: this.props.state.name,
-            type: this.props.state.queue? "_queue" : this.props.state.type
+            type: this.props.state.queue? "_queue" : this.props.state.type,
+            statuses: _.clone(this.props.state.statuses)
         };
     },
 
@@ -141,6 +165,15 @@ const EditColumn = React.createClass({
     },
 
     render: function() {
+
+        const selectLink = (field, multiple) => {
+            return (v, m) => {
+                let opts = {};
+                opts[field] = multiple? _.pluck(m, 'value') : v;
+                this.setState(opts);
+            };
+        };
+
         return (
             <span>
                 <Button bsStyle="link" onClick={this.open}>Modify&hellip;</Button>
@@ -152,13 +185,25 @@ const EditColumn = React.createClass({
                     <Modal.Body>
                         {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
                         <form className="form-horizontal" onSubmit={this.edit}>
-                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='In progress' />
-                            <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-2" wrapperClassName="col-xs-10">
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='In progress' />
+                            <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-3" wrapperClassName="col-xs-9">
                                 <option value={StatusTypes.backlog}>Backlog</option>
                                 <option value={StatusTypes.accepted}>In progress</option>
                                 <option value="_queue">Queue</option>
                                 <option value={StatusTypes.completed}>Completed</option>
                             </Input>
+                            <div className="form-group">
+                                <label className="col-xs-3 control-label">JIRA statuses</label>
+                                <div className="col-xs-9">
+                                    <Select
+                                        multi={true}
+                                        options={this.props.knownStatuses.map(s => { return { value: s, label: s }; })}
+                                        allowCreate={true}
+                                        value={this.state.statuses}
+                                        onChange={selectLink('statuses', true)}
+                                    />
+                                </div>
+                            </div>
                         </form>
                     </Modal.Body>
                     <Modal.Footer>
@@ -174,7 +219,7 @@ const EditColumn = React.createClass({
     edit: function(e) {
         e.preventDefault();
 
-        let invalid = (!this.state.name || !this.state.type);
+        let invalid = !this.state.name;
         if(invalid) {
             this.setState({invalid: true});
             return;
@@ -184,7 +229,7 @@ const EditColumn = React.createClass({
             name: this.state.name,
             type: this.state.type === "_queue"? StatusTypes.accepted : this.state.type,
             queue: this.state.type === "_queue"? true : false,
-            statuses: this.props.state.statuses
+            statuses: this.state.statuses
         });
 
         this.close();
@@ -212,7 +257,7 @@ const KanbanColumn = React.createClass({
                 typeClass = "success";
         }
 
-        let edit = <EditColumn state={this.props.state} onEdit={this.props.onEdit} />;
+        let edit = <EditColumn knownStatuses={this.props.knownStatuses} state={this.props.state} onEdit={this.props.onEdit} />;
 
         return (
             <Panel className="kanban-col" bsStyle={typeClass} header={this.props.state.name} footer={edit}>
@@ -294,7 +339,7 @@ export default React.createClass({
                                 />
                         );
                     })}
-                    <NewColumn onCreate={this.addColumn}/>
+                    <NewColumn knownStatuses={knownStatuses} onCreate={this.addColumn}/>
                 </KanbanBoard>
                 <UnusedStatuses statuses={unusedStatuses} />
             </div>
