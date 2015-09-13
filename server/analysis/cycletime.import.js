@@ -5,11 +5,7 @@
 import { moment, _ } from 'app-deps';
 import { QueryManager } from './querymanager';
 
-export const StatusTypes = {
-    backlog: 'backlog',     // work is not yet committed to
-    accepted: 'accepted',   // work is accepted into the system and committed to
-    completed: 'completed'  // work is finished
-};
+import { StatusTypes } from 'lib/models';
 
 /**
  * Find and export cycle time data.
@@ -37,7 +33,7 @@ export const StatusTypes = {
  *          },
  *          {
  *              name: 'analysis-done',
- *              type: StatusTypes.queue,
+ *              type: StatusTypes.accepted,
  *              statuses: ["Analysis Done"],
  *              queue: true
  *          },
@@ -49,7 +45,7 @@ export const StatusTypes = {
  *          },
  *          {
  *              name: 'done',
- *              type: StatusTypes.complete,
+ *              type: StatusTypes.completed,
  *              statuses: ["Done", "Closed"],
  *              queue: false
  *          },
@@ -76,7 +72,7 @@ export class CycleTime extends QueryManager {
                 },
                 {
                     name: 'done',
-                    type: StatusTypes.complete,
+                    type: StatusTypes.completed,
                     statuses: ["Done", "Closed"],
                     queue: false
                 },

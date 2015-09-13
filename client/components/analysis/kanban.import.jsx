@@ -1,9 +1,12 @@
 /* jshint esnext:true */
-/* global Meteor, React, ReactMeteorData */
+/* global Meteor, React */
 
 "use strict";
 
-import { _, classNames } from 'app-deps';
+import { _, classNames, ReactBootstrap } from 'app-deps';
+import { StatusTypes } from 'lib/models';
+
+const { Label, Panel, Modal, Alert, Input, Button } = ReactBootstrap;
 
 const Status = React.createClass({
     displayName: "Status",
@@ -14,15 +17,15 @@ const Status = React.createClass({
     },
 
     typeClassMap: {
-        'normal': 'label-primary',
-        'custom': 'label-warning'
+        'normal': 'primary',
+        'custom': 'warning'
     },
 
     render: function() {
         let type = this.props.type || "normal";
 
         return (
-            <span className={classNames("label", this.typeClassMap[type])}>{this.props.name}</span>
+            <Label bsStyle={this.typeClassMap[type]}>{this.props.name}</Label>
         );
     }
 
@@ -33,31 +36,25 @@ const KanbanColumn = React.createClass({
 
     propTypes: {
         name: React.PropTypes.string.isRequired,
-        type: React.PropTypes.oneOf(['backlog', 'accepted', 'completed']),
+        type: React.PropTypes.oneOf([StatusTypes.backlog, StatusTypes.accepted, StatusTypes.completed]),
         queue: React.PropTypes.bool.isRequired
     },
 
-    typeClassMap: {
-        'backlog': 'panel-info',
-        'accepted': 'panel-primary',
-        'completed': 'panel-success'
-    },
-
     render: function() {
-        let typeClass = this.props.queue? "panel-danger" : this.typeClassMap[this.props.type];
+
+        let typeClass = this.props.queue? "danger" : "primary";
+        switch(this.props.type) {
+            case StatusTypes.backlog:
+                typeClass = "info";
+                break;
+            case StatusTypes.completed:
+                typeClass = "success";
+        }
 
         return (
-            <div className={classNames("panel" , "kanban-col", typeClass)}>
-                <div className="panel-heading">
-                    {this.props.name}
-                </div>
-                <div className="panel-body">
-                    {this.props.children}
-                </div>
-                {/* <div className="panel-footer">
-                    <a href="#">Change...</a>
-                </div> */}
-            </div>
+            <Panel className="kanban-col" bsStyle={typeClass} header={this.props.name}>
+                {this.props.children}
+            </Panel>
         );
     }
 
@@ -65,20 +62,78 @@ const KanbanColumn = React.createClass({
 
 const KanbanNewColumn = React.createClass({
     displayName: "KanbanNewColumn",
+    mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
+        onCreate: React.PropTypes.func.isRequired,
+    },
 
+    getInitialState: function() {
+        return {
+            showModal: false,
+            invalid: false,
+            name: null,
+            type: null
+        };
+    },
+
+    close: function() {
+        this.setState({ showModal: false });
+    },
+
+    open: function() {
+        this.setState({ showModal: true });
     },
 
     render: function() {
-
         return (
-            <div className="panel panel-default kanban-col kanban-col-new">
-                <div className="panel-body">
+            <span>
+                <Panel className="kanban-col kanban-col-new" bsStyle="default" onClick={this.open}>
                     <span className="glyphicon glyphicon-plus" />
-                </div>
-            </div>
+                </Panel>
+
+                <Modal show={this.state.showModal} onHide={this.close}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Add column</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
+                        <form className="form-horizontal" onSubmit={this.createProject}>
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='In progress' />
+                            <Input valueLink={this.linkState('type')} type='select' label='Type' labelClassName="col-xs-2" wrapperClassName="col-xs-10">
+                                <option value={StatusTypes.backlog}>Backlog</option>
+                                <option value={StatusTypes.accepted}>In progress</option>
+                                <option value="_queue">Queue</option>
+                                <option value={StatusTypes.completed}>Completed</option>
+                            </Input>
+                        </form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.close}>Close</Button>
+                        <Button bsStyle='primary' onClick={this.create}>Create</Button>
+                    </Modal.Footer>
+                </Modal>
+
+            </span>
         );
+    },
+
+    create: function() {
+
+        let invalid = (!this.state.name || !this.state.type);
+        if(invalid) {
+            this.setState({invalid: true});
+            return;
+        }
+
+        this.props.onCreate({
+            name: this.state.name,
+            type: this.state.type === "_queue"? StatusTypes.accepted : this.state.type,
+            queue: this.state.type === "_queue"? true : false,
+            statuses: []
+        });
+
+        this.setState(this.getInitialState());
     }
 
 });
@@ -106,18 +161,13 @@ const UnusedStatuses = React.createClass({
 
     render: function() {
         return (
-            <div className="panel panel-default unused-statuses">
-                <div className="panel-heading">
-                    Unmapped statuses
-                </div>
-                <div className="panel-body">
-                    {this.props.statuses.map(s => {
-                        return (
-                            <span key={s.name} className="label label-success">{s.name}</span>
-                        );
-                    })}
-                </div>
-            </div>
+            <Panel className="unused-statuses" bsStyle="default" header="Unmapped statuses">
+                {this.props.statuses.map(s => {
+                    return (
+                        <span key={s.name} className="label label-success">{s.name}</span>
+                    );
+                })}
+            </Panel>
         );
     }
 
@@ -156,11 +206,16 @@ export default React.createClass({
                             </KanbanColumn>
                         );
                     })}
-                    <KanbanNewColumn />
+                    <KanbanNewColumn onCreate={this.addColumn}/>
                 </KanbanBoard>
-                {unusedStatuses? <UnusedStatuses statuses={unusedStatuses} /> : ""}
+                <UnusedStatuses statuses={unusedStatuses} />
             </div>
         );
+    },
+
+    addColumn: function(col) {
+        // TODO: Handle
+        console.log(col);
     }
 
 });

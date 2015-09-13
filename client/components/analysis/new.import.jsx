@@ -6,6 +6,8 @@
 import { _, ReactBootstrap, ReactSelect as Select} from 'app-deps';
 
 import Loading from '../loading';
+import KanbanSetup from './kanban';
+import { StatusTypes } from 'lib/models';
 
 const { Input, Button } = ReactBootstrap;
 
@@ -28,16 +30,47 @@ const AnalysisForm = React.createClass({
             validResolutions: null,
             customFields: null,
             jqlFilter: null,
-            cycle: null
+            cycle: [  //TODO: Set to null when done testing
+                   {
+                       name: 'todo',
+                       type: StatusTypes.backlog,
+                       statuses: ["Open", "To Do"],
+                       queue: false
+                   },
+                   {
+                       name: 'analysis',
+                       type: StatusTypes.accepted,
+                       statuses: ["Analysis"],
+                       queue: false
+                   },
+                   {
+                       name: 'analysis-done',
+                       type: StatusTypes.accepted,
+                       statuses: ["Analysis Done"],
+                       queue: true
+                   },
+                   {
+                       name: 'development',
+                       type: StatusTypes.accepted,
+                       statuses: ["In Progress"],
+                       queue: false
+                   },
+                   {
+                       name: 'done',
+                       type: StatusTypes.completed,
+                       statuses: ["Done", "Closed"],
+                       queue: false
+                   },
+               ]
         };
     },
 
     render: function() {
 
-        const selectLink = field => {
-            return v => {
+        const selectLink = (field, multiple) => {
+            return (v, m) => {
                 let opts = {};
-                opts[field] = v;
+                opts[field] = multiple? _.pluck(m, 'value') : v;
                 this.setState(opts);
             };
         };
@@ -80,6 +113,30 @@ const AnalysisForm = React.createClass({
             };
         }), 'label');
 
+        let statuses = null; // only available once project selected
+        if(this.state.project && this.props.referenceData.projects[this.state.project]) {
+            let issueTypesAndStatuses = this.props.referenceData.projects[this.state.project].statuses;
+            let selectedIssueTypes = this.state.issueTypes || [];
+
+            statuses =
+            _.uniq(
+                _.sortBy(
+                    _.flatten(
+                        _.pluck(
+                            _.filter(
+                                issueTypesAndStatuses,
+                                issueType => { return _.includes(selectedIssueTypes, issueType.name); }
+                            ),
+                            'statuses'
+                        )
+                    ),
+                    'name'
+                ),
+                true,
+                'name'
+            );
+        }
+
         return (
             <form className="form-horizontal" onSubmit={this.onSubmit}>
 
@@ -107,7 +164,8 @@ const AnalysisForm = React.createClass({
                 <div className="form-group">
                     <label htmlFor="inputIssueTypes" className="col-xs-3 control-label">Issue types</label>
                     <div className="col-xs-9">
-                        <Select mult
+                        <Select
+                            multi={true}
                             id="inputIssueTypes"
                             name="issueTypes"
                             options={issueTypes}
@@ -115,7 +173,7 @@ const AnalysisForm = React.createClass({
                             disabled={issueTypes === null}
                             placeholder={issueTypes === null? "Please select a project first" : "Select..."}
                             value={this.state.issueTypes}
-                            onChange={selectLink('issueTypes')}
+                            onChange={selectLink('issueTypes', true)}
                         />
                     </div>
                 </div>
@@ -124,12 +182,13 @@ const AnalysisForm = React.createClass({
                     <label htmlFor="inputResolutions" className="col-xs-3 control-label">Valid resolutions</label>
                     <div className="col-xs-9">
                         <Select
+                            multi={true}
                             id="inputResolutions"
                             name="validResolutions"
                             options={resolutions}
                             optionRenderer={optionRenderer}
                             value={this.state.validResolutions}
-                            onChange={selectLink('validResolutions')}
+                            onChange={selectLink('validResolutions', true)}
                         />
                     </div>
                 </div>
@@ -139,12 +198,13 @@ const AnalysisForm = React.createClass({
                     <label htmlFor="inputFields" className="col-xs-3 control-label">Additional fields</label>
                     <div className="col-xs-9">
                         <Select
+                            multi={true}
                             id="inputFields"
                             name="customFields"
                             options={customFields}
                             optionRenderer={optionRenderer}
                             value={this.state.customFields}
-                            onChange={selectLink('customFields')}
+                            onChange={selectLink('customFields', true)}
                         />
                     </div>
                 </div>
@@ -156,7 +216,12 @@ const AnalysisForm = React.createClass({
                     </div>
                 </div>
 
-                {/* TODO: Cycle */}
+                <div className="form-group">
+                    <label htmlFor="inputCycle" className="col-xs-3 control-label">Cycle</label>
+                    <div className="col-xs-9">
+                        <KanbanSetup statuses={statuses} value={this.state.cycle} onChange={selectLink('cycle')} />
+                    </div>
+                </div>
 
                 <div className="form-group">
                     <div className="col-xs-offset-3 col-xs-9">
@@ -244,8 +309,17 @@ export default React.createClass({
                             user viewing the analysis to apply further filters and slices.
                         </p>
                         <p>
-                            Finally, if you need to filter on anything else, add a snippet
+                            If you need to filter on anything else, add a snippet
                             of JQL to the <em>Additional JQL filter</em> box.
+                        </p>
+                        <p>
+                            You must then configure the <em>cycle</em> that describes your
+                            workflow. Click the empty column (+) to create a new
+                            state, and designate it as describing work items either in
+                            the backlog (unstarted), in progress, queuing or done.
+                            You can re-order states by dragging the columns. Then
+                            drag JIRA statuses from the list of unmapped statuses
+                            into the appropriate column.
                         </p>
                     </div>
                 </div>
