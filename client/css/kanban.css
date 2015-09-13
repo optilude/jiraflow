@@ -39,7 +39,11 @@
 
 .kanban-col-new .panel-body {
     text-align: center;
-    padding: 15px 0;
+    min-height: 96px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .unused-statuses .label {

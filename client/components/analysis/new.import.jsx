@@ -30,38 +30,7 @@ const AnalysisForm = React.createClass({
             validResolutions: null,
             customFields: null,
             jqlFilter: null,
-            cycle: [  //TODO: Set to null when done testing
-                   {
-                       name: 'todo',
-                       type: StatusTypes.backlog,
-                       statuses: ["Open", "To Do"],
-                       queue: false
-                   },
-                   {
-                       name: 'analysis',
-                       type: StatusTypes.accepted,
-                       statuses: ["Analysis"],
-                       queue: false
-                   },
-                   {
-                       name: 'analysis-done',
-                       type: StatusTypes.accepted,
-                       statuses: ["Analysis Done"],
-                       queue: true
-                   },
-                   {
-                       name: 'development',
-                       type: StatusTypes.accepted,
-                       statuses: ["In Progress"],
-                       queue: false
-                   },
-                   {
-                       name: 'done',
-                       type: StatusTypes.completed,
-                       statuses: ["Done", "Closed"],
-                       queue: false
-                   },
-               ]
+            cycle: null
         };
     },
 

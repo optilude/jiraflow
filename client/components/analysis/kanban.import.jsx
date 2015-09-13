@@ -347,13 +347,13 @@ export default React.createClass({
     },
 
     addColumn: function(col) {
-        let value = _.clone(this.props.value);
+        let value = _.clone(this.props.value || []);
         value.push(col);
         this.props.onChange(value);
     },
 
     editColumn: function(idx, col) {
-        let value = _.clone(this.props.value);
+        let value = _.clone(this.props.value || []);
         value[idx] = col;
         this.props.onChange(value);
     }
