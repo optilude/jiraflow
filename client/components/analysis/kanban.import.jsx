@@ -8,6 +8,10 @@ import { StatusTypes } from 'lib/models';
 
 const { Label, Panel, Modal, Alert, Input, Button } = ReactBootstrap;
 
+// TODO: Implement abililty to add custom statuses
+// TODO: Column re-ordering via drag-and-drop
+// TODO: Status assignment via drag-and-drop
+
 const Status = React.createClass({
     displayName: "Status",
 
@@ -31,37 +35,8 @@ const Status = React.createClass({
 
 });
 
-const KanbanColumn = React.createClass({
-    displayName: "KanbanColumn",
-
-    propTypes: {
-        name: React.PropTypes.string.isRequired,
-        type: React.PropTypes.oneOf([StatusTypes.backlog, StatusTypes.accepted, StatusTypes.completed]),
-        queue: React.PropTypes.bool.isRequired
-    },
-
-    render: function() {
-
-        let typeClass = this.props.queue? "danger" : "primary";
-        switch(this.props.type) {
-            case StatusTypes.backlog:
-                typeClass = "info";
-                break;
-            case StatusTypes.completed:
-                typeClass = "success";
-        }
-
-        return (
-            <Panel className="kanban-col" bsStyle={typeClass} header={this.props.name}>
-                {this.props.children}
-            </Panel>
-        );
-    }
-
-});
-
-const KanbanNewColumn = React.createClass({
-    displayName: "KanbanNewColumn",
+const NewColumn = React.createClass({
+    displayName: "NewColumn",
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
@@ -98,7 +73,7 @@ const KanbanNewColumn = React.createClass({
                     </Modal.Header>
                     <Modal.Body>
                         {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
-                        <form className="form-horizontal" onSubmit={this.createProject}>
+                        <form className="form-horizontal" onSubmit={this.create}>
                             <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='In progress' />
                             <Input valueLink={this.linkState('type')} type='select' label='Type' labelClassName="col-xs-2" wrapperClassName="col-xs-10">
                                 <option value={StatusTypes.backlog}>Backlog</option>
@@ -118,7 +93,8 @@ const KanbanNewColumn = React.createClass({
         );
     },
 
-    create: function() {
+    create: function(e) {
+        e.preventDefault();
 
         let invalid = (!this.state.name || !this.state.type);
         if(invalid) {
@@ -138,6 +114,117 @@ const KanbanNewColumn = React.createClass({
 
 });
 
+const EditColumn = React.createClass({
+    displayName: "EditColumn",
+    mixins: [React.addons.LinkedStateMixin],
+
+    propTypes: {
+        state: React.PropTypes.object.isRequired,
+        onEdit: React.PropTypes.func.isRequired,
+    },
+
+    getInitialState: function() {
+        return {
+            showModal: false,
+            invalid: false,
+            name: this.props.state.name,
+            type: this.props.state.queue? "_queue" : this.props.state.type
+        };
+    },
+
+    close: function() {
+        this.setState({ showModal: false });
+    },
+
+    open: function() {
+        this.setState({ showModal: true });
+    },
+
+    render: function() {
+        return (
+            <span>
+                <Button bsStyle="link" onClick={this.open}>Modify&hellip;</Button>
+
+                <Modal show={this.state.showModal} onHide={this.close}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Edit column</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
+                        <form className="form-horizontal" onSubmit={this.edit}>
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-2" wrapperClassName="col-xs-10" placeholder='In progress' />
+                            <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-2" wrapperClassName="col-xs-10">
+                                <option value={StatusTypes.backlog}>Backlog</option>
+                                <option value={StatusTypes.accepted}>In progress</option>
+                                <option value="_queue">Queue</option>
+                                <option value={StatusTypes.completed}>Completed</option>
+                            </Input>
+                        </form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.close}>Close</Button>
+                        <Button bsStyle='primary' onClick={this.edit}>Modify</Button>
+                    </Modal.Footer>
+                </Modal>
+
+            </span>
+        );
+    },
+
+    edit: function(e) {
+        e.preventDefault();
+
+        let invalid = (!this.state.name || !this.state.type);
+        if(invalid) {
+            this.setState({invalid: true});
+            return;
+        }
+
+        this.props.onEdit({
+            name: this.state.name,
+            type: this.state.type === "_queue"? StatusTypes.accepted : this.state.type,
+            queue: this.state.type === "_queue"? true : false,
+            statuses: this.props.state.statuses
+        });
+
+        this.close();
+    }
+
+});
+
+const KanbanColumn = React.createClass({
+    displayName: "KanbanColumn",
+
+    propTypes: {
+        state: React.PropTypes.object.isRequired,
+        onEdit: React.PropTypes.func.isRequired,
+    },
+
+    render: function() {
+
+        let typeClass = this.props.state.queue? "danger" : "primary";
+        switch(this.props.state.type) {
+            case StatusTypes.backlog:
+                typeClass = "info";
+                break;
+            case StatusTypes.completed:
+                typeClass = "success";
+        }
+
+        let edit = <EditColumn state={this.props.state} onEdit={this.props.onEdit} />;
+
+        return (
+            <Panel className="kanban-col" bsStyle={typeClass} header={this.props.state.name} footer={edit}>
+                {this.props.state.statuses.map(s => {
+                    return (
+                        <Status key={s} name={s} type="normal" />
+                    );
+                })}
+            </Panel>
+        );
+    }
+
+});
 
 const KanbanBoard = React.createClass({
     displayName: "KanbanBoard",
@@ -195,18 +282,10 @@ export default React.createClass({
         return (
             <div>
                 <KanbanBoard>
-                    {cycle.map(c => {
-                        return (
-                            <KanbanColumn key={c.name} name={c.name} type={c.type} queue={c.queue}>
-                                {c.statuses.map(s => {
-                                    return (
-                                        <Status key={s} name={s} type="normal" />
-                                    );
-                                })}
-                            </KanbanColumn>
-                        );
+                    {cycle.map((c, i) => {
+                        return <KanbanColumn key={c.name} state={c} onEdit={this.editColumn.bind(this, i)} />;
                     })}
-                    <KanbanNewColumn onCreate={this.addColumn}/>
+                    <NewColumn onCreate={this.addColumn}/>
                 </KanbanBoard>
                 <UnusedStatuses statuses={unusedStatuses} />
             </div>
@@ -214,8 +293,15 @@ export default React.createClass({
     },
 
     addColumn: function(col) {
-        // TODO: Handle
-        console.log(col);
+        let value = _.clone(this.props.value);
+        value.push(col);
+        this.props.onChange(value);
+    },
+
+    editColumn: function(idx, col) {
+        let value = _.clone(this.props.value);
+        value[idx] = col;
+        this.props.onChange(value);
     }
 
 });

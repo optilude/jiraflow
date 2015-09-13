@@ -15,12 +15,16 @@
 .kanban-col .panel-heading,
 .kanban-col .panel-footer {
     padding: 5px 10px;
-    overflow-y: auto;
+}
+
+.kanban-col .panel-footer button {
+    padding: 0;
+    font-size: 90%;
 }
 
 .kanban-col .panel-body {
     padding: 5px;
-    overflow-y: auto;
+    min-height: 33px;
 }
 
 .kanban-col .panel-body .label {
@@ -30,6 +34,7 @@
 
 .kanban-col-new {
     border-style: dashed;
+    cursor: pointer;
 }
 
 .kanban-col-new .panel-body {
