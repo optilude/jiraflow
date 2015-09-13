@@ -1,0 +1,43 @@
+.kanban-board {
+    overflow-x: scroll;
+    white-space: nowrap;
+}
+
+.kanban-col {
+    width: 160px;
+    margin-right: 10px;
+    display: inline-block;
+    white-space: normal;
+    vertical-align: top;
+}
+
+
+.kanban-col .panel-heading,
+.kanban-col .panel-footer {
+    padding: 5px 10px;
+    overflow-y: auto;
+}
+
+.kanban-col .panel-body {
+    padding: 5px;
+    overflow-y: auto;
+}
+
+.kanban-col .panel-body .label {
+    display: inline-block;
+    margin: 3px
+}
+
+.kanban-col-new {
+    border-style: dashed;
+}
+
+.kanban-col-new .panel-body {
+    text-align: center;
+    padding: 15px 0;
+}
+
+.unused-statuses .label {
+    display: inline-block;
+    margin: 3px
+}
