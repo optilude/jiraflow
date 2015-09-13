@@ -197,6 +197,7 @@ const KanbanColumn = React.createClass({
 
     propTypes: {
         state: React.PropTypes.object.isRequired,
+        knownStatuses: React.PropTypes.array.isRequired,
         onEdit: React.PropTypes.func.isRequired,
     },
 
@@ -217,7 +218,7 @@ const KanbanColumn = React.createClass({
             <Panel className="kanban-col" bsStyle={typeClass} header={this.props.state.name} footer={edit}>
                 {this.props.state.statuses.map(s => {
                     return (
-                        <Status key={s} name={s} type="normal" />
+                        <Status key={s} name={s} type={_.includes(this.props.knownStatuses, s)? "normal" : "custom"} />
                     );
                 })}
             </Panel>
@@ -251,7 +252,7 @@ const UnusedStatuses = React.createClass({
             <Panel className="unused-statuses" bsStyle="default" header="Unmapped statuses">
                 {this.props.statuses.map(s => {
                     return (
-                        <span key={s.name} className="label label-success">{s.name}</span>
+                        <Status key={s} name={s} type="normal" />
                     );
                 })}
             </Panel>
@@ -276,14 +277,22 @@ export default React.createClass({
         }
 
         let cycle = this.props.value || [],
+            knownStatuses = _.pluck(this.props.statuses, 'name'),
             usedStatuses = _.flatten(_.pluck(cycle, 'statuses')),
-            unusedStatuses = this.props.statuses.filter(v => { return !_.includes(usedStatuses, v.name); });
+            unusedStatuses = knownStatuses.filter(v => { return !_.includes(usedStatuses, v); });
 
         return (
             <div>
                 <KanbanBoard>
                     {cycle.map((c, i) => {
-                        return <KanbanColumn key={c.name} state={c} onEdit={this.editColumn.bind(this, i)} />;
+                        return (
+                            <KanbanColumn
+                                key={c.name}
+                                state={c}
+                                knownStatuses={knownStatuses}
+                                onEdit={this.editColumn.bind(this, i)}
+                                />
+                        );
                     })}
                     <NewColumn onCreate={this.addColumn}/>
                 </KanbanBoard>
