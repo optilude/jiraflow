@@ -13,3 +13,4 @@ export const ReactBootstrap = Dependencies.ReactBootstrap;
 export const ReactRouterBootstrap = Dependencies.ReactRouterBootstrap;
 export const ReactSelect = Dependencies.ReactSelect;
 export const JiraClient = Dependencies.JiraClient;
+export const ReactDnD = Dependencies.ReactDnD;

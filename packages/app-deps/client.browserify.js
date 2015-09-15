@@ -23,6 +23,9 @@ Dependencies = {
     ReactBootstrap: require('react-bootstrap'),
     ReactRouterBootstrap: require('react-router-bootstrap'),
     ReactSelect: require('react-select'),
+    ReactDnD: require('react-dnd'),
 
     JiraClient: require('jira-connector')
 };
+
+Dependencies.ReactDnD.HTML5 = require('react-dnd/modules/backends/HTML5');

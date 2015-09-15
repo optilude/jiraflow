@@ -3,13 +3,47 @@
 
 "use strict";
 
-import { _, classNames, ReactBootstrap, ReactSelect as Select } from 'app-deps';
+import { _, classNames, ReactBootstrap, ReactSelect as Select, ReactDnD } from 'app-deps';
 import { StatusTypes } from 'lib/models';
 
 const { Label, Panel, Modal, Alert, Input, Button } = ReactBootstrap;
 
-// TODO: Column re-ordering via drag-and-drop
-// TODO: Status assignment via drag-and-drop
+// Drag-and-drop handling
+
+const DnDItemTypes = {
+    Column: 'Column',
+    Status: 'Status'
+};
+
+const ColumnDragSource = {
+
+    beginDrag(props) {
+        return {
+            id: props.id,
+            originalIndex: props.getIndex(props.id)
+        };
+    }
+
+};
+
+const ColumnDropTarget = {
+
+    canDrop() {
+        return false;
+    },
+
+    hover(props, monitor) {
+        const { id: draggedId } = monitor.getItem();
+        const { id: overId } = props;
+
+        if (draggedId !== overId) {
+            const overIndex = props.getIndex(overId);
+            props.onMove(draggedId, overIndex);
+        }
+    }
+};
+
+// End drag-and-drop handling
 
 const Status = React.createClass({
     displayName: "Status",
@@ -24,7 +58,7 @@ const Status = React.createClass({
         'custom': 'warning'
     },
 
-    render: function() {
+    render() {
         let type = this.props.type || "normal";
 
         return (
@@ -40,28 +74,30 @@ const NewColumn = React.createClass({
 
     propTypes: {
         knownStatuses: React.PropTypes.array.isRequired,
+        existingColumnNames: React.PropTypes.array.isRequired,
         onCreate: React.PropTypes.func.isRequired,
     },
 
-    getInitialState: function() {
+    getInitialState() {
         return {
             showModal: false,
             invalid: false,
+            nameNotUnique: false,
             name: null,
             type: StatusTypes.backlog,
             statuses: []
         };
     },
 
-    close: function() {
+    close() {
         this.setState({ showModal: false });
     },
 
-    open: function() {
+    open() {
         this.setState({ showModal: true });
     },
 
-    render: function() {
+    render() {
 
         const selectLink = (field, multiple) => {
             return (v, m) => {
@@ -83,8 +119,9 @@ const NewColumn = React.createClass({
                     </Modal.Header>
                     <Modal.Body>
                         {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
+                        {this.state.nameNotUnique? <Alert bsStyle='danger'>Column name already in use</Alert> : ""}
                         <form className="form-horizontal" onSubmit={this.create}>
-                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='In progress' />
+                            <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='To do' />
                             <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-3" wrapperClassName="col-xs-9">
                                 <option value={StatusTypes.backlog}>Backlog</option>
                                 <option value={StatusTypes.accepted}>In progress</option>
@@ -115,12 +152,16 @@ const NewColumn = React.createClass({
         );
     },
 
-    create: function(e) {
+    create(e) {
         e.preventDefault();
 
-        let invalid = !this.state.name;
-        if(invalid) {
+        if(!this.state.name) {
             this.setState({invalid: true});
+            return;
+        }
+
+        if(_.includes(this.props.existingColumnNames, this.state.name)) {
+            this.setState({nameNotUnique: true});
             return;
         }
 
@@ -142,29 +183,31 @@ const EditColumn = React.createClass({
 
     propTypes: {
         knownStatuses: React.PropTypes.array.isRequired,
+        existingColumnNames: React.PropTypes.array.isRequired,
         state: React.PropTypes.object.isRequired,
         onEdit: React.PropTypes.func.isRequired,
     },
 
-    getInitialState: function() {
+    getInitialState() {
         return {
             showModal: false,
             invalid: false,
+            nameNotUnique: false,
             name: this.props.state.name,
             type: this.props.state.queue? "_queue" : this.props.state.type,
             statuses: _.clone(this.props.state.statuses)
         };
     },
 
-    close: function() {
+    close() {
         this.setState({ showModal: false });
     },
 
-    open: function() {
+    open() {
         this.setState({ showModal: true });
     },
 
-    render: function() {
+    render() {
 
         const selectLink = (field, multiple) => {
             return (v, m) => {
@@ -184,6 +227,7 @@ const EditColumn = React.createClass({
                     </Modal.Header>
                     <Modal.Body>
                         {this.state.invalid? <Alert bsStyle='danger'>Name and type are both required</Alert> : ""}
+                        {this.state.nameNotUnique? <Alert bsStyle='danger'>Column name already in use</Alert> : ""}
                         <form className="form-horizontal" onSubmit={this.edit}>
                             <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='In progress' />
                             <Input valueLink={this.linkState('type')} defaultValue={this.state.type} type='select' label='Type' labelClassName="col-xs-3" wrapperClassName="col-xs-9">
@@ -216,13 +260,21 @@ const EditColumn = React.createClass({
         );
     },
 
-    edit: function(e) {
+    edit(e) {
         e.preventDefault();
 
-        let invalid = !this.state.name;
-        if(invalid) {
+        if(!this.state.name) {
             this.setState({invalid: true});
             return;
+        } else {
+            this.setState({invalid: false});
+        }
+
+        if(this.props.state.name !== this.state.name && _.includes(this.props.existingColumnNames, this.state.name)) {
+            this.setState({nameNotUnique: true});
+            return;
+        } else {
+            this.setState({nameNotUnique: false});
         }
 
         this.props.onEdit({
@@ -237,16 +289,37 @@ const EditColumn = React.createClass({
 
 });
 
-const KanbanColumn = React.createClass({
+const KanbanColumn =
+ReactDnD.DropTarget(DnDItemTypes.Column, ColumnDropTarget, (connect) => ({
+    connectDropTarget: connect.dropTarget()
+}))(
+ReactDnD.DragSource(DnDItemTypes.Column, ColumnDragSource, (connect, monitor) => ({
+    connectDragSource: connect.dragSource(),
+    connectDragPreview: connect.dragPreview(),
+    isDragging: monitor.isDragging()
+}))(
+React.createClass({
     displayName: "KanbanColumn",
 
     propTypes: {
+        id: React.PropTypes.string.isRequired,
+
         state: React.PropTypes.object.isRequired,
         knownStatuses: React.PropTypes.array.isRequired,
+        existingColumnNames: React.PropTypes.array.isRequired,
+
         onEdit: React.PropTypes.func.isRequired,
+        onMove: React.PropTypes.func.isRequired,
+        getIndex: React.PropTypes.func.isRequired,
+
+        // ReactDnD props
+        connectDropTarget: React.PropTypes.func.isRequired,
+        connectDragSource: React.PropTypes.func.isRequired,
+        connectDragPreview: React.PropTypes.func.isRequired,
+        isDragging: React.PropTypes.bool.isRequired
     },
 
-    render: function() {
+    render() {
 
         let typeClass = this.props.state.queue? "danger" : "primary";
         switch(this.props.state.type) {
@@ -257,25 +330,27 @@ const KanbanColumn = React.createClass({
                 typeClass = "success";
         }
 
-        let edit = <EditColumn knownStatuses={this.props.knownStatuses} state={this.props.state} onEdit={this.props.onEdit} />;
+        let edit = <EditColumn knownStatuses={this.props.knownStatuses} existingColumnNames={this.props.existingColumnNames} state={this.props.state} onEdit={this.props.onEdit} />,
+            header = this.props.connectDragSource(<div>{this.props.state.name}</div>),
+            opacity = this.props.isDragging? 0 : 1;
 
-        return (
-            <Panel className="kanban-col" bsStyle={typeClass} header={this.props.state.name} footer={edit}>
+        return this.props.connectDragPreview(this.props.connectDropTarget(
+            <Panel className="kanban-col" bsStyle={typeClass} header={header} footer={edit} style={{opacity}}>
                 {this.props.state.statuses.map(s => {
                     return (
                         <Status key={s} name={s} type={_.includes(this.props.knownStatuses, s)? "normal" : "custom"} />
                     );
                 })}
             </Panel>
-        );
+        ));
     }
 
-});
+})));
 
 const KanbanBoard = React.createClass({
     displayName: "KanbanBoard",
 
-    render: function() {
+    render() {
         return (
             <div className="kanban-board">
                 {this.props.children}
@@ -292,7 +367,7 @@ const UnusedStatuses = React.createClass({
         statuses: React.PropTypes.array.isRequired
     },
 
-    render: function() {
+    render() {
         return (
             <Panel className="unused-statuses" bsStyle="default" header="Unmapped statuses">
                 {this.props.statuses.map(s => {
@@ -306,7 +381,7 @@ const UnusedStatuses = React.createClass({
 
 });
 
-export default React.createClass({
+export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
     displayName: "KanbanSetup",
 
     propTypes: {
@@ -315,7 +390,7 @@ export default React.createClass({
         onChange: React.PropTypes.func.isRequired
     },
 
-    render: function() {
+    render() {
 
         if(this.props.statuses === null) {
             return <div className="help-block">Please select a project and one or more issue types first</div>;
@@ -324,7 +399,8 @@ export default React.createClass({
         let cycle = this.props.value || [],
             knownStatuses = _.pluck(this.props.statuses, 'name'),
             usedStatuses = _.flatten(_.pluck(cycle, 'statuses')),
-            unusedStatuses = knownStatuses.filter(v => { return !_.includes(usedStatuses, v); });
+            unusedStatuses = knownStatuses.filter(v => { return !_.includes(usedStatuses, v); }),
+            existingColumnNames = _.pluck(cycle, 'name');
 
         return (
             <div>
@@ -332,30 +408,46 @@ export default React.createClass({
                     {cycle.map((c, i) => {
                         return (
                             <KanbanColumn
+                                id={c.name}
                                 key={c.name}
                                 state={c}
                                 knownStatuses={knownStatuses}
+                                existingColumnNames={existingColumnNames}
                                 onEdit={this.editColumn.bind(this, i)}
+                                onMove={this.moveColumn}
+                                getIndex={this.getIndex}
                                 />
                         );
                     })}
-                    <NewColumn knownStatuses={knownStatuses} onCreate={this.addColumn}/>
+                    <NewColumn knownStatuses={knownStatuses} existingColumnNames={existingColumnNames} onCreate={this.addColumn}/>
                 </KanbanBoard>
                 <UnusedStatuses statuses={unusedStatuses} />
             </div>
         );
     },
 
-    addColumn: function(col) {
+    addColumn(col) {
         let value = _.clone(this.props.value || []);
         value.push(col);
         this.props.onChange(value);
     },
 
-    editColumn: function(idx, col) {
+    editColumn(idx, col) {
         let value = _.clone(this.props.value || []);
         value[idx] = col;
         this.props.onChange(value);
+    },
+
+    getIndex(id) {
+        return _.findIndex(this.props.value || [], v => { return v.name === id; });
+    },
+
+    moveColumn(id, toIdx) {
+        let value = _.clone(this.props.value || []),
+            fromIdx = this.getIndex(id);
+
+        value.splice(toIdx, 0, value.splice(fromIdx, 1)[0]);
+        this.props.onChange(value);
     }
 
-});
+}));

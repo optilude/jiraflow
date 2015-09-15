@@ -22,7 +22,8 @@ Npm.depends({
     "lodash": "3.10.1",
     "bootbox": "4.4.0",
     "jira-connector": "1.4.1",
-    "react-select": "0.6.3"
+    "react-select": "0.6.3",
+    "react-dnd": "1.1.7"
 });
 
 // Note specific package versions embedded below as well.
