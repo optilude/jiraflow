@@ -9,7 +9,7 @@ import Loading from '../loading';
 import KanbanSetup from './kanban';
 import { StatusTypes } from 'lib/models';
 
-const { Input, Button } = ReactBootstrap;
+const { Input, Button, Alert } = ReactBootstrap;
 
 const AnalysisForm = React.createClass({
     displayName: "AnalysisForm",
@@ -42,6 +42,12 @@ const AnalysisForm = React.createClass({
                 opts[field] = multiple? _.pluck(m, 'value') : v;
                 this.setState(opts);
             };
+        };
+
+        const customFieldsLink = (v, m) => {
+            this.setState({
+                customFields: m.reduce((r, v) => { r[v.value] = v.label; return r; }, {})
+            });
         };
 
         const optionRenderer = opt => {
@@ -109,12 +115,9 @@ const AnalysisForm = React.createClass({
         return (
             <form className="form-horizontal" onSubmit={this.onSubmit}>
 
-                <div className="form-group">
-                    <label htmlFor="inputName" className="col-xs-3 control-label">Name</label>
-                    <div className="col-xs-9">
-                        <input id="inputName" type="text" className="form-control" placeholder="My analysis" valueLink={this.linkState('name')} required />
-                    </div>
-                </div>
+                {this.state.invalid? <Alert bsStyle='danger'>Name, project, issue type and cycle are required</Alert> : ""}
+
+                <Input valueLink={this.linkState('name')} type='text' label='Name' labelClassName="col-xs-3" wrapperClassName="col-xs-9" placeholder='My analysis' />
 
                 <div className="form-group">
                     <label htmlFor="inputProject" className="col-xs-3 control-label">Project</label>
@@ -134,14 +137,15 @@ const AnalysisForm = React.createClass({
                     <label htmlFor="inputIssueTypes" className="col-xs-3 control-label">Issue types</label>
                     <div className="col-xs-9">
                         <Select
-                            multi={true}
+                            multi
                             id="inputIssueTypes"
                             name="issueTypes"
                             options={issueTypes}
                             optionRenderer={optionRenderer}
                             disabled={issueTypes === null}
                             placeholder={issueTypes === null? "Please select a project first" : "Select..."}
-                            value={this.state.issueTypes}
+                            delimiter=";"
+                            value={this.state.issueTypes !== null? this.state.issueTypes.join(";") : null}
                             onChange={selectLink('issueTypes', true)}
                         />
                     </div>
@@ -151,12 +155,13 @@ const AnalysisForm = React.createClass({
                     <label htmlFor="inputResolutions" className="col-xs-3 control-label">Valid resolutions</label>
                     <div className="col-xs-9">
                         <Select
-                            multi={true}
+                            multi
                             id="inputResolutions"
                             name="validResolutions"
                             options={resolutions}
                             optionRenderer={optionRenderer}
-                            value={this.state.validResolutions}
+                            delimiter=";"
+                            value={this.state.validResolutions !== null? this.state.validResolutions.join(";") : null}
                             onChange={selectLink('validResolutions', true)}
                         />
                     </div>
@@ -167,23 +172,19 @@ const AnalysisForm = React.createClass({
                     <label htmlFor="inputFields" className="col-xs-3 control-label">Additional fields</label>
                     <div className="col-xs-9">
                         <Select
-                            multi={true}
+                            multi
                             id="inputFields"
                             name="customFields"
                             options={customFields}
                             optionRenderer={optionRenderer}
-                            value={this.state.customFields}
-                            onChange={selectLink('customFields', true)}
+                            delimiter=";"
+                            value={this.state.customFields !== null? _.keys(this.state.customFields).join(";") : null}
+                            onChange={customFieldsLink}
                         />
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="inputJQL" className="col-xs-3 control-label">Additional JQL filter</label>
-                    <div className="col-xs-9">
-                        <input id="inputJQL" type="text" className="form-control" valueLink={this.linkState('jqlFilter')} />
-                    </div>
-                </div>
+                <Input valueLink={this.linkState('jqlFilter')} type='text' label='Additional JQL filter' labelClassName="col-xs-3" wrapperClassName="col-xs-9" />
 
                 <div className="form-group">
                     <label htmlFor="inputCycle" className="col-xs-3 control-label">Cycle</label>
@@ -205,9 +206,23 @@ const AnalysisForm = React.createClass({
     onSubmit: function(e) {
         e.preventDefault();
 
-        // TODO: Validate
+        const invalid = !(
+            this.state.name &&
+            this.state.project &&
+            this.state.issueTypes !== null &&
+            this.state.issueTypes.length > 0 &&
+            this.state.cycle !== null &&
+            this.state.cycle.length > 0
+        );
 
-        this.props.onSubmit(_.omit(this.state, 'invalid'));
+
+        this.setState({ invalid });
+
+
+
+        if(!invalid) {
+            this.props.onSubmit(_.omit(this.state, 'invalid'));
+        }
     }
 
 

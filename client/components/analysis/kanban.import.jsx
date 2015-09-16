@@ -173,9 +173,9 @@ const NewColumn = React.createClass({
                                 <label className="col-xs-3 control-label">JIRA statuses</label>
                                 <div className="col-xs-9">
                                     <Select
-                                        multi={true}
+                                        multi
                                         options={this.props.knownStatuses.map(s => { return { value: s, label: s }; })}
-                                        allowCreate={true}
+                                        allowCreate
                                         delimiter=";"
                                         value={this.state.statuses.join(";")}
                                         onChange={selectLink('statuses', true)}
@@ -283,9 +283,9 @@ const EditColumn = React.createClass({
                                 <label className="col-xs-3 control-label">JIRA statuses</label>
                                 <div className="col-xs-9">
                                     <Select
-                                        multi={true}
+                                        multi
                                         options={this.props.knownStatuses.map(s => ({ value: s, label: s }))}
-                                        allowCreate={true}
+                                        allowCreate
                                         delimiter=";"
                                         value={this.state.statuses.join(";")}
                                         onChange={selectLink('statuses', true)}
