@@ -43,14 +43,55 @@ const ColumnDropTarget = {
     }
 };
 
+const StatusDragSource = {
+
+    beginDrag(props) {
+        return {
+            id: props.name,
+            column: props.column
+        };
+    },
+
+    endDrag(props, monitor) {
+        if(!monitor.didDrop()) {
+            return;
+        }
+
+        const { id, column } = monitor.getItem(),
+              { newColumn } = monitor.getDropResult();
+
+        props.remapStatus(id, column, newColumn);
+    }
+
+};
+
+const StatusDropTarget = {
+
+    drop(props, monitor) {
+        return {
+            newColumn: props.id || null
+        };
+    }
+
+};
+
+
 // End drag-and-drop handling
 
-const Status = React.createClass({
+
+const Status = ReactDnD.DragSource(DnDItemTypes.Status, StatusDragSource, (connect, monitor) => ({
+    connectDragSource: connect.dragSource()
+}))(React.createClass({
     displayName: "Status",
 
     propTypes: {
         name: React.PropTypes.string.isRequired,
-        type: React.PropTypes.oneOf(['normal', 'custom'])
+        type: React.PropTypes.oneOf(['normal', 'custom']),
+        column: React.PropTypes.string,
+        remapStatus: React.PropTypes.func.isRequired,
+
+        // ReactDnD props
+        connectDragSource: React.PropTypes.func.isRequired,
     },
 
     typeClassMap: {
@@ -61,12 +102,12 @@ const Status = React.createClass({
     render() {
         let type = this.props.type || "normal";
 
-        return (
+        return this.props.connectDragSource(
             <Label bsStyle={this.typeClassMap[type]}>{this.props.name}</Label>
         );
     }
 
-});
+}));
 
 const NewColumn = React.createClass({
     displayName: "NewColumn",
@@ -135,7 +176,8 @@ const NewColumn = React.createClass({
                                         multi={true}
                                         options={this.props.knownStatuses.map(s => { return { value: s, label: s }; })}
                                         allowCreate={true}
-                                        value={this.state.statuses}
+                                        delimiter=";"
+                                        value={this.state.statuses.join(";")}
                                         onChange={selectLink('statuses', true)}
                                     />
                                 </div>
@@ -241,9 +283,10 @@ const EditColumn = React.createClass({
                                 <div className="col-xs-9">
                                     <Select
                                         multi={true}
-                                        options={this.props.knownStatuses.map(s => { return { value: s, label: s }; })}
+                                        options={this.props.knownStatuses.map(s => ({ value: s, label: s }))}
                                         allowCreate={true}
-                                        value={this.state.statuses}
+                                        delimiter=";"
+                                        value={this.state.statuses.join(";")}
                                         onChange={selectLink('statuses', true)}
                                     />
                                 </div>
@@ -298,6 +341,10 @@ ReactDnD.DragSource(DnDItemTypes.Column, ColumnDragSource, (connect, monitor) =>
     connectDragPreview: connect.dragPreview(),
     isDragging: monitor.isDragging()
 }))(
+ReactDnD.DropTarget(DnDItemTypes.Status, StatusDropTarget, (connect, monitor) => ({
+    connectStatusDropTarget: connect.dropTarget(),
+    isOverStatusDropTarget: monitor.isOver()
+}))(
 React.createClass({
     displayName: "KanbanColumn",
 
@@ -311,12 +358,16 @@ React.createClass({
         onEdit: React.PropTypes.func.isRequired,
         onMove: React.PropTypes.func.isRequired,
         getIndex: React.PropTypes.func.isRequired,
+        remapStatus: React.PropTypes.func.isRequired,
 
         // ReactDnD props
         connectDropTarget: React.PropTypes.func.isRequired,
         connectDragSource: React.PropTypes.func.isRequired,
         connectDragPreview: React.PropTypes.func.isRequired,
-        isDragging: React.PropTypes.bool.isRequired
+        isDragging: React.PropTypes.bool.isRequired,
+
+        connectStatusDropTarget: React.PropTypes.func.isRequired,
+        isOverStatusDropTarget: React.PropTypes.bool.isRequired
     },
 
     render() {
@@ -330,22 +381,41 @@ React.createClass({
                 typeClass = "success";
         }
 
-        let edit = <EditColumn knownStatuses={this.props.knownStatuses} existingColumnNames={this.props.existingColumnNames} state={this.props.state} onEdit={this.props.onEdit} />,
-            header = this.props.connectDragSource(<div>{this.props.state.name}</div>),
-            opacity = this.props.isDragging? 0 : 1;
+        let opacity = this.props.isDragging? 0 : 1;
 
         return this.props.connectDragPreview(this.props.connectDropTarget(
-            <Panel className="kanban-col" bsStyle={typeClass} header={header} footer={edit} style={{opacity}}>
-                {this.props.state.statuses.map(s => {
-                    return (
-                        <Status key={s} name={s} type={_.includes(this.props.knownStatuses, s)? "normal" : "custom"} />
-                    );
-                })}
-            </Panel>
+            <div className={classNames("panel kanban-col", "panel-" + typeClass)} style={{opacity}}>
+                {this.props.connectDragSource(
+                    <div className="panel-heading">{this.props.state.name}</div>
+                )}
+                {this.props.connectStatusDropTarget(
+                    <div className={classNames("panel-body", {"dragging-over" : this.props.isOverStatusDropTarget})}>
+                        {this.props.state.statuses.map(s => {
+                            return (
+                                <Status
+                                    key={s}
+                                    name={s}
+                                    column={this.props.id}
+                                    type={_.includes(this.props.knownStatuses, s)? "normal" : "custom"}
+                                    remapStatus={this.props.remapStatus}
+                                    />
+                            );
+                        })}
+                    </div>
+                )}
+                <div className="panel-footer">
+                    <EditColumn
+                        knownStatuses={this.props.knownStatuses}
+                        existingColumnNames={this.props.existingColumnNames}
+                        state={this.props.state}
+                        onEdit={this.props.onEdit}
+                        />
+                </div>
+            </div>
         ));
     }
 
-})));
+}))));
 
 const KanbanBoard = React.createClass({
     displayName: "KanbanBoard",
@@ -360,26 +430,45 @@ const KanbanBoard = React.createClass({
 
 });
 
-const UnusedStatuses = React.createClass({
+const UnusedStatuses = ReactDnD.DropTarget(DnDItemTypes.Status, StatusDropTarget, (connect, monitor) => ({
+    connectStatusDropTarget: connect.dropTarget(),
+    isOverStatusDropTarget: monitor.isOver()
+}))(React.createClass({
     displayName: "UnusedStatuses",
 
     propTypes: {
-        statuses: React.PropTypes.array.isRequired
+        statuses: React.PropTypes.array.isRequired,
+        remapStatus: React.PropTypes.func.isRequired,
+
+        // ReactDnD props
+        connectStatusDropTarget: React.PropTypes.func.isRequired,
+        isOverStatusDropTarget: React.PropTypes.bool.isRequired
     },
 
     render() {
         return (
-            <Panel className="unused-statuses" bsStyle="default" header="Unmapped statuses">
-                {this.props.statuses.map(s => {
-                    return (
-                        <Status key={s} name={s} type="normal" />
-                    );
-                })}
-            </Panel>
+            <div className="panel panel-default unused-statuses">
+                <div className="panel-heading">Unmapped statuses</div>
+                {this.props.connectStatusDropTarget(
+                    <div className={classNames("panel-body", {"dragging-over" : this.props.isOverStatusDropTarget})}>
+                        {this.props.statuses.map(s => {
+                            return (
+                                <Status
+                                    key={s}
+                                    name={s}
+                                    type="normal"
+                                    column={null}
+                                    remapStatus={this.props.remapStatus}
+                                    />
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         );
     }
 
-});
+}));
 
 export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
     displayName: "KanbanSetup",
@@ -416,12 +505,20 @@ export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
                                 onEdit={this.editColumn.bind(this, i)}
                                 onMove={this.moveColumn}
                                 getIndex={this.getIndex}
+                                remapStatus={this.remapStatus}
                                 />
                         );
                     })}
-                    <NewColumn knownStatuses={knownStatuses} existingColumnNames={existingColumnNames} onCreate={this.addColumn}/>
+                    <NewColumn
+                        knownStatuses={knownStatuses}
+                        existingColumnNames={existingColumnNames}
+                        onCreate={this.addColumn}
+                        />
                 </KanbanBoard>
-                <UnusedStatuses statuses={unusedStatuses} />
+                <UnusedStatuses
+                    statuses={unusedStatuses}
+                    remapStatus={this.remapStatus}
+                    />
             </div>
         );
     },
@@ -447,6 +544,22 @@ export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
             fromIdx = this.getIndex(id);
 
         value.splice(toIdx, 0, value.splice(fromIdx, 1)[0]);
+        this.props.onChange(value);
+    },
+
+    remapStatus(status, fromColumn, toColumn) {
+        let value = _.clone(this.props.value || []),
+            fromIdx = fromColumn !== null? this.getIndex(fromColumn) : null,
+            toIdx = toColumn !== null? this.getIndex(toColumn) : null;
+
+        if(fromIdx !== null) {
+            value[fromIdx].statuses = _.without(value[fromIdx].statuses, status);
+        }
+
+        if(toIdx !== null) {
+            value[toIdx].statuses = _.sortBy(value[toIdx].statuses.concat(status));
+        }
+
         this.props.onChange(value);
     }
 
