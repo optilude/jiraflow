@@ -228,6 +228,7 @@ const EditColumn = React.createClass({
         existingColumnNames: React.PropTypes.array.isRequired,
         state: React.PropTypes.object.isRequired,
         onEdit: React.PropTypes.func.isRequired,
+        onRemove: React.PropTypes.func.isRequired
     },
 
     getInitialState() {
@@ -295,6 +296,7 @@ const EditColumn = React.createClass({
                     </Modal.Body>
                     <Modal.Footer>
                         <Button onClick={this.close}>Close</Button>
+                        <Button bsStyle='danger' onClick={this.delete}>Delete</Button>
                         <Button bsStyle='primary' onClick={this.edit}>Modify</Button>
                     </Modal.Footer>
                 </Modal>
@@ -328,6 +330,13 @@ const EditColumn = React.createClass({
         });
 
         this.close();
+    },
+
+    delete(e) {
+        e.preventDefault();
+
+        this.props.onRemove();
+        this.close();
     }
 
 });
@@ -356,6 +365,7 @@ React.createClass({
         existingColumnNames: React.PropTypes.array.isRequired,
 
         onEdit: React.PropTypes.func.isRequired,
+        onRemove: React.PropTypes.func.isRequired,
         onMove: React.PropTypes.func.isRequired,
         getIndex: React.PropTypes.func.isRequired,
         remapStatus: React.PropTypes.func.isRequired,
@@ -409,6 +419,7 @@ React.createClass({
                         existingColumnNames={this.props.existingColumnNames}
                         state={this.props.state}
                         onEdit={this.props.onEdit}
+                        onRemove={this.props.onRemove}
                         />
                 </div>
             </div>
@@ -503,6 +514,7 @@ export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
                                 knownStatuses={knownStatuses}
                                 existingColumnNames={existingColumnNames}
                                 onEdit={this.editColumn.bind(this, i)}
+                                onRemove={this.removeColumn.bind(this, i)}
                                 onMove={this.moveColumn}
                                 getIndex={this.getIndex}
                                 remapStatus={this.remapStatus}
@@ -526,6 +538,12 @@ export default ReactDnD.DragDropContext(ReactDnD.HTML5)(React.createClass({
     addColumn(col) {
         let value = _.clone(this.props.value || []);
         value.push(col);
+        this.props.onChange(value);
+    },
+
+    removeColumn(idx) {
+        let value = _.clone(this.props.value || []);
+        value.splice(idx, 1);
         this.props.onChange(value);
     },
 
