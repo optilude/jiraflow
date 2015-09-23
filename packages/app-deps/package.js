@@ -36,7 +36,7 @@ Package.onUse(function(api) {
     ], 'client');
 
     api.use([
-        'universe:modules@0.2.0',
+        'universe:modules@0.4.2',
     ]);
 
     api.addFiles([
